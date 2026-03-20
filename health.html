@@ -1,0 +1,1237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SOUL HEALTH TEST</title>
+
+  <style>
+    :root{
+      --bg:#05060a;
+      --txt:#e9ecff;
+      --muted:rgba(233,236,255,.72);
+      --stroke:rgba(255,255,255,.14);
+      --glass:rgba(255,255,255,.06);
+      --shadow: 0 22px 70px rgba(0,0,0,.55);
+      --r:18px;
+
+      --good:#4da3ff;   /* blue battery */
+      --mid:#ffd24d;    /* yellow battery */
+      --bad:#ff4d6d;    /* red battery */
+
+      --accent: var(--good);
+      --accentSoft: rgba(77,163,255,.18);
+
+      --glowGreen: rgba(120,255,175,.55);
+      --lime: rgba(120,255,175,.18);
+      --limeStroke: rgba(120,255,175,.35);
+
+      /* per-result leaf colors (tree + bg) */
+      --leaf1: rgba(120,255,175,.55);
+      --leaf2: rgba(255,125,215,.55);
+      --leaf3: rgba(233,236,255,.12);
+
+      /* trunk */
+      --bark1: rgba(120,78,40,.55);
+      --bark2: rgba(80,46,22,.35);
+      --barkHi: rgba(255,255,255,.10);
+    }
+
+    html[data-state="good"]{
+      --accent: var(--good);
+      --accentSoft: rgba(77,163,255,.18);
+      --leaf1: rgba(120,255,175,.55);  /* fresh green */
+      --leaf2: rgba(255,125,215,.62);  /* sakura pink */
+      --leaf3: rgba(233,236,255,.12);
+    }
+    html[data-state="mid"]{
+      --accent: var(--mid);
+      --accentSoft: rgba(255,210,77,.16);
+      --leaf1: rgba(120,255,175,.45);  /* green */
+      --leaf2: rgba(255,210,77,.55);   /* yellow */
+      --leaf3: rgba(233,236,255,.10);
+    }
+    html[data-state="bad"]{
+      --accent: var(--bad);
+      --accentSoft: rgba(255,77,109,.14);
+      --leaf1: rgba(255,210,77,.35);   /* dry yellow */
+      --leaf2: rgba(255,125,215,.18);  /* faded pink */
+      --leaf3: rgba(233,236,255,.08);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--txt);
+      min-height:100vh;
+      background:
+        radial-gradient(1200px 800px at 50% 0%, rgba(255,125,215,.10), transparent 55%),
+        radial-gradient(900px 700px at 12% 82%, rgba(120,255,175,.06), transparent 55%),
+        radial-gradient(900px 700px at 90% 85%, rgba(77,163,255,.07), transparent 55%),
+        var(--bg);
+      overflow-x:hidden;
+      position:relative;
+    }
+
+    /* subtle leaves + flowers in the background */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+      opacity:.42;
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cdefs%3E%3CradialGradient id='p' cx='50%25' cy='50%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='%23ff7dd7' stop-opacity='.55'/%3E%3Cstop offset='70%25' stop-color='%23ff7dd7' stop-opacity='.16'/%3E%3Cstop offset='100%25' stop-color='%23ff7dd7' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='%2378ffaf' stop-opacity='.45'/%3E%3Cstop offset='70%25' stop-color='%2378ffaf' stop-opacity='.12'/%3E%3Cstop offset='100%25' stop-color='%2378ffaf' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d='M60 70 C80 40 110 55 115 78 C120 100 95 112 78 100 C62 88 45 90 60 70Z' fill='url(%23g)'/%3E%3Cpath d='M170 160 C190 130 220 145 225 168 C230 190 205 202 188 190 C172 178 155 180 170 160Z' fill='url(%23g)' opacity='.9'/%3E%3Ccircle cx='170' cy='70' r='26' fill='url(%23p)'/%3E%3Ccircle cx='70' cy='170' r='22' fill='url(%23p)' opacity='.85'/%3E%3Ccircle cx='120' cy='120' r='16' fill='url(%23p)' opacity='.55'/%3E%3C/svg%3E")
+        0 0/240px 240px repeat;
+      filter: drop-shadow(0 18px 40px rgba(0,0,0,.25));
+    }
+
+    .vignette{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      background: radial-gradient(80% 60% at 50% 40%, transparent 0%, rgba(0,0,0,.35) 70%, rgba(0,0,0,.60) 100%);
+    }
+
+    /* Side “wisnia” branches */
+    .sakuraSides{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      opacity:.95;
+      /* keep only left branch so it doesn't overlap the tree area on the right */
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 1200'%3E%3Cdefs%3E%3CradialGradient id='p' cx='50%25' cy='50%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='%23ff7dd7' stop-opacity='.55'/%3E%3Cstop offset='65%25' stop-color='%23ff7dd7' stop-opacity='.16'/%3E%3Cstop offset='100%25' stop-color='%23ff7dd7' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' x1='0' x2='0' y1='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='.18'/%3E%3Cstop offset='100%25' stop-color='%23ffffff' stop-opacity='.04'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M160 1200 C140 980 170 800 140 640 C115 510 40 420 52 280 C66 130 150 60 240 0' fill='none' stroke='url(%23b)' stroke-width='6' stroke-linecap='round' opacity='.55'/%3E%3Cg opacity='.88'%3E%3Ccircle cx='215' cy='180' r='22' fill='url(%23p)'/%3E%3Ccircle cx='120' cy='420' r='24' fill='url(%23p)'/%3E%3Ccircle cx='255' cy='700' r='24' fill='url(%23p)'/%3E%3Ccircle cx='150' cy='980' r='24' fill='url(%23p)'/%3E%3C/g%3E%3C/svg%3E") left center / 280px 1200px no-repeat;
+      filter: drop-shadow(0 18px 40px rgba(0,0,0,.35));
+    }
+
+    .wrap{
+      position:relative;
+      z-index:1;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:28px 16px 44px;
+    }
+
+    .shell{
+      .shell{
+  background: rgba(10,12,18,.78);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow: 0 28px 90px rgba(0,0,0,.68);
+  backdrop-filter: blur(14px);
+}
+
+.card{
+  background: rgba(0,0,0,.42);
+  border:1px solid rgba(255,255,255,.18);
+}
+
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 10px 2px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+
+    .counter{
+      font-size:13px;
+      color: var(--muted);
+      letter-spacing:.02em;
+    }
+
+    h1{
+      margin:10px 10px 4px;
+      font-size:26px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+    .sub{
+      margin:0 10px 12px;
+      color: var(--muted);
+      line-height:1.35;
+      font-size:14px;
+    }
+
+    .card{
+      margin:10px;
+      padding:14px;
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      background: rgba(0,0,0,.22);
+    }
+
+    
+      .q{
+  font-size:20px;
+  line-height:1.35;
+  letter-spacing:.01em;
+  margin:0 0 16px;
+}
+
+.sub{
+  font-size:14px;
+  line-height:1.5;
+}
+
+
+    .options{ display:grid; gap:10px; }
+
+    .option{
+  padding:14px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.05);
+}
+
+.option:hover{
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.22);
+}
+
+.option span{
+  font-size:15px;
+  line-height:1.35;
+  color: rgba(233,236,255,.92);
+}
+
+    
+  
+    .option input{ margin-top:2px; accent-color: rgba(120,255,175,.95); }
+    .option span{ color: var(--txt); line-height:1.25; font-size:15px; }
+    .option strong{ letter-spacing:.08em; }
+
+    .option:has(input:checked){
+      border-color: var(--limeStroke);
+      background: rgba(120,255,175,.08);
+      box-shadow: 0 0 0 3px rgba(120,255,175,.10), 0 14px 40px rgba(0,0,0,.22);
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      padding:10px;
+      margin-top:6px;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--txt);
+      padding:12px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      font-size:12px;
+      transition: transform .08s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease;
+      width:calc(50% - 5px);
+      position:relative;
+      overflow:hidden;
+    }
+    .btn:hover, .btn:focus-visible{
+      transform: translateY(-1px);
+      background: var(--lime);
+      border-color: var(--limeStroke);
+      box-shadow: 0 0 0 3px rgba(120,255,175,.12), 0 18px 52px rgba(0,0,0,.35);
+      outline:none;
+    }
+    /* press = lights up MORE */
+    .btn:active{
+      transform: translateY(0px) scale(0.99);
+      background: rgba(120,255,175,.26);
+      border-color: rgba(120,255,175,.55);
+      box-shadow: 0 0 0 4px rgba(120,255,175,.18), 0 0 34px rgba(120,255,175,.14), 0 26px 70px rgba(0,0,0,.45);
+    }
+
+    .btn-main{
+      background: rgba(77,163,255,.12);
+      border-color: rgba(77,163,255,.28);
+    }
+    .btn-main:hover, .btn-main:focus-visible{
+      background: rgba(120,255,175,.18);
+      border-color: var(--limeStroke);
+      box-shadow: 0 0 0 3px rgba(120,255,175,.14), 0 18px 52px rgba(0,0,0,.35);
+    }
+    .btn-main:active{
+      background: rgba(120,255,175,.30);
+      border-color: rgba(120,255,175,.62);
+      box-shadow: 0 0 0 4px rgba(120,255,175,.20), 0 0 40px rgba(120,255,175,.18), 0 26px 70px rgba(0,0,0,.45);
+    }
+
+    .btn.flash::after{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: radial-gradient(circle at 50% 50%, rgba(120,255,175,.45), transparent 55%);
+      animation: flash .35s ease-out;
+      pointer-events:none;
+    }
+    @keyframes flash{
+      from{ transform: scale(.7); opacity:1; }
+      to{ transform: scale(1.25); opacity:0; }
+    }
+
+    /* RESULT */
+    #result-shell{ display:none; }
+    #result-shell.active{ display:block; }
+
+    .resultGrid{
+      display:grid;
+      grid-template-columns: 1.12fr .88fr;
+      gap:12px;
+      padding:10px;
+    }
+    @media (max-width: 860px){
+      .resultGrid{ grid-template-columns: 1fr; }
+    }
+
+    .resultLeft{
+      padding:14px;
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      background: rgba(0,0,0,.22);
+      position:relative;
+      overflow:hidden;
+    }
+    .resultLeft::before{
+      content:"";
+      position:absolute;
+      inset:-20%;
+      background:
+        radial-gradient(520px 320px at 15% 8%, var(--accentSoft), transparent 55%),
+        radial-gradient(520px 320px at 90% 25%, rgba(255,125,215,.08), transparent 55%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .resultLeft > *{ position:relative; z-index:1; }
+
+    .resultHeaderLine{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .resultMeta{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:min(520px, 100%);
+    }
+
+    .resultShort{
+      font-size:12px;
+      color: var(--muted);
+      letter-spacing:.14em;
+      text-transform:uppercase;
+    }
+
+    .resultTitleBig{
+      font-size:22px;
+      margin:0;
+      letter-spacing:.02em;
+      line-height:1.1;
+    }
+    .glow{
+      color: var(--accent);
+      text-shadow: 0 0 18px rgba(255,255,255,.06), 0 0 26px rgba(77,163,255,.18);
+    }
+
+    .pillRow{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.05);
+      color: rgba(233,236,255,.86);
+    }
+    .pill b{
+      color: var(--accent);
+      font-weight:700;
+      letter-spacing:.10em;
+    }
+
+    /* VERTICAL BATTERY (short, real battery shape) */
+    .battery{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:flex-end;
+      min-width:170px;
+      flex:0 0 auto;
+    }
+    .batteryLabel{
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: var(--muted);
+    }
+    .batteryIcon{
+      width:34px;
+      height:90px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.04);
+      position:relative;
+      padding:8px 7px 9px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .batteryIcon::before{
+      content:"";
+      position:absolute;
+      top:-7px;
+      left:50%;
+      width:16px;
+      height:8px;
+      transform:translateX(-50%);
+      border-radius:6px 6px 0 0;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.05);
+    }
+    .batteryFill{
+      position:absolute;
+      left:7px;
+      right:7px;
+      bottom:8px;
+      height:0%;
+      border-radius:10px;
+      background: var(--good);
+      transition: height .35s ease, background .2s ease;
+      box-shadow: 0 0 22px rgba(255,255,255,.08);
+    }
+    .batteryGlow{
+      position:absolute;
+      inset:-20%;
+      background: radial-gradient(260px 220px at 50% 80%, rgba(255,255,255,.10), transparent 55%);
+      pointer-events:none;
+      opacity:.9;
+    }
+
+    .section{
+      margin-top:14px;
+      padding:12px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      background: rgba(255,255,255,.04);
+    }
+    .section h3{
+      margin:0 0 8px;
+      font-size:13px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(233,236,255,.82);
+    }
+    .section p{
+      margin:0;
+      color: rgba(233,236,255,.90);
+      line-height:1.55;
+      font-size:14px;
+    }
+    .section p .hi{
+      color: var(--accent);
+      font-weight:700;
+    }
+
+    .points{
+      margin:12px 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:8px;
+    }
+    .points li{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:10px 10px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:12px;
+      background: rgba(0,0,0,.18);
+      margin:0;
+    }
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      margin-top:4px;
+      background: var(--accent);
+      box-shadow: 0 0 18px rgba(255,255,255,.08);
+      flex:0 0 auto;
+    }
+    .points span{
+      line-height:1.4;
+      font-size:14px;
+      color: rgba(233,236,255,.92);
+    }
+
+    .resultRight{
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      background: rgba(0,0,0,.22);
+      overflow:hidden;
+      position:relative;
+      min-height:560px;
+    }
+    .treeTitle{
+      position:absolute;
+      top:12px;
+      left:12px;
+      right:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      z-index:2;
+    }
+    .treeTitle .small{
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: var(--muted);
+    }
+    .treeTitle .miniScore{
+      font-size:12px;
+      color: rgba(233,236,255,.82);
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.05);
+      padding:6px 10px;
+      border-radius:999px;
+    }
+
+    .treeStage{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      padding:46px 18px 18px;
+      z-index:1;
+    }
+    .treeStage svg{
+      width:100%;
+      height:100%;
+      max-height:720px;
+      filter: drop-shadow(0 18px 44px rgba(0,0,0,.45));
+    }
+
+    /* Tree motion */
+    .treeSway{ transform-origin: 50% 95%; animation: sway 5.6s ease-in-out infinite; }
+    .canopySway{ transform-origin: 50% 40%; animation: sway2 4.8s ease-in-out infinite; }
+
+    .leafWiggle{ transform-origin: center; animation: leaf 3.4s ease-in-out infinite; }
+    .leafWiggle.s2{ animation-duration: 4.2s; }
+    .leafWiggle.s3{ animation-duration: 5.1s; }
+    .leafWiggle.s4{ animation-duration: 3.9s; }
+
+    @keyframes sway{
+      0%{ transform: rotate(-0.6deg) translateX(-2px); }
+      50%{ transform: rotate(0.8deg) translateX(2px); }
+      100%{ transform: rotate(-0.6deg) translateX(-2px); }
+    }
+    @keyframes sway2{
+      0%{ transform: rotate(0.9deg); }
+      50%{ transform: rotate(-0.8deg); }
+      100%{ transform: rotate(0.9deg); }
+    }
+    @keyframes leaf{
+      0%{ transform: rotate(-1.2deg) translateY(0px); opacity:.95; }
+      50%{ transform: rotate(1.3deg) translateY(-2px); opacity:1; }
+      100%{ transform: rotate(-1.2deg) translateY(0px); opacity:.95; }
+    }
+
+    /* falling leaves (bad state) — per-leaf CSS vars control start pos, scale, timing */
+    .fallingLeaf{
+      transform-origin: center center;
+      transform-box: fill-box;
+      will-change: transform, opacity;
+      opacity: 0;
+      pointer-events: none;
+      animation-name: leafFallNew;
+      animation-iteration-count: infinite;
+      animation-timing-function: linear;
+      animation-duration: 9s;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,.36));
+    }
+    .fallingLeaf.d2{ animation-duration: 11.2s; animation-delay: 1.1s; }
+    .fallingLeaf.d3{ animation-duration: 10.0s; animation-delay: 2.0s; }
+    .fallingLeaf.d4{ animation-duration: 12.0s; animation-delay: .6s; }
+
+    @keyframes leafFallNew{
+      0%{
+        transform: translate(var(--tx,0px), calc(var(--ty,0px) - 30vh)) rotate(0deg) scale(var(--s,1));
+        opacity:0;
+      }
+      12%{ opacity:1; }
+      45%{
+        transform: translate(calc(var(--tx,0px) + 14px), calc(var(--ty,0px) + 32vh)) rotate(120deg) scale(var(--s,1));
+        opacity:.98;
+      }
+      78%{
+        transform: translate(calc(var(--tx,0px) - 22px), calc(var(--ty,0px) + 58vh)) rotate(260deg) scale(var(--s,1));
+        opacity:.78;
+      }
+      100%{
+        transform: translate(calc(var(--tx,0px) + 40px), calc(var(--ty,0px) + 115vh)) rotate(420deg) scale(var(--s,1));
+        opacity:0;
+      }
+    }
+
+    .note{
+      margin:10px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size:13px;
+      line-height:1.4;
+    }
+  </style>
+</head>
+
+<body>
+
+  
+  <div class="vignette"></div>
+  <div class="sakuraSides"></div>
+
+  <div class="wrap">
+    <!-- QUIZ -->
+    <div class="shell" id="quiz-shell">
+      <div class="topbar">
+        <div class="chip">FREE · SOUL HEALTH</div>
+        <div class="counter" id="q-counter">Question 1 / 24</div>
+      </div>
+
+      <h1>SOUL HEALTH TEST</h1>
+      <p class="sub">
+        24 small scans. Be honest — no “should answers.”<br />
+        Result shows battery + tree state.
+      </p>
+
+      <div class="card">
+        <p class="q" id="q-text"></p>
+        <div class="options" id="answer-list"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnBack" onclick="prevQuestion()">Back</button>
+        <button class="btn btn-main" id="btnNext" onclick="nextQuestion()">Next</button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="shell" id="result-shell">
+      <div class="topbar">
+        <div class="chip">RESULT · SOUL BATTERY</div>
+        <div class="counter" id="score-line"></div>
+      </div>
+
+      <div class="resultGrid">
+
+        <!-- LEFT -->
+        <div class="resultLeft">
+          <div class="resultHeaderLine">
+            <div class="resultMeta">
+              <div class="resultShort" id="result-short"></div>
+              <h2 class="resultTitleBig" id="result-title"></h2>
+              <div class="pillRow">
+                <div class="pill" id="result-tag"></div>
+                <div class="pill" id="result-vibe"></div>
+              </div>
+            </div>
+
+            <div class="battery">
+              <div class="batteryLabel">Soul battery</div>
+              <div class="batteryIcon" aria-label="Battery">
+                <div class="batteryFill" id="battery-fill"></div>
+                <div class="batteryGlow"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section" id="sec-main"></div>
+          <div class="section" id="sec-strength"></div>
+          <ul class="points" id="result-points"></ul>
+          <div class="section" id="sec-guidance"></div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="resultRight">
+          <div class="treeTitle">
+            <div class="small">Tree state</div>
+            <div class="miniScore" id="tree-label">—</div>
+          </div>
+          <div class="treeStage" id="tree-stage"></div>
+        </div>
+
+      </div>
+
+      <div class="note">
+        Retake = refresh. Home = Back to Home.
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnHome" onclick="window.location.href='index.html'">Back to Home</button>
+        <button class="btn btn-main" id="btnRetake" onclick="window.location.reload()">Retake</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ------------- QUESTIONS -------------
+    const protoQuestions = [
+      { q:"When you look at the world around you, what do you feel deep inside?",
+        A:"Like this world is disconnected — I’m here but it doesn’t fully match my soul",
+        B:"I’m trying to understand my place in it",
+        C:"The world is what it is — you adapt, stay focused, and get on with life" },
+      { q:"Do you see signs or feel meaning in things?",
+        A:"Yes — sometimes I’m like “wow, how did I even meet this person?”",
+        B:"Sometimes, but I’m not sure",
+        C:"I don’t really look for that — I prefer to stay realistic and grounded" },
+      { q:"When you’re alone with yourself, what does it feel like on a soul-level?",
+        A:"Like I enter my own universe — strange, deep, sometimes confusing",
+        B:"I’m figuring things out, trying to find what feels right",
+        C:"I prefer keeping busy — overthinking isn’t helpful, productivity is" },
+      { q:"Do you cry or laugh easily?",
+        A:"Yes haha",
+        B:"Normal I guess",
+        C:"Not really — I try to stay composed, emotions don’t solve anything" },
+      { q:"Do you believe in finding a soulmate?",
+        A:"Yes",
+        B:"Maybe not “soulmate,” but love yes",
+        C:"I think relationships work when you choose the right partner logically" },
+      { q:"What is true beauty? When you see a truly beautiful person it’s because…",
+        A:"Hard to describe — it’s their energy, their vibe, the whole being",
+        B:"Both — they look good, but also something about them feels interesting",
+        C:"Good genetics, well-kept appearance — beauty is mostly presentation" },
+      { q:"When life pressures you, what does your inner self try to do?",
+        A:"Retreat into peace, nature, or my inner world",
+        B:"I look for balance, even if I feel pulled",
+        C:"I focus on solutions — staying practical works better than emotional stuff" },
+      { q:"How does beauty or creation hit your soul? (music, art, ideas, nature)",
+        A:"It feels like something ancient wakes up in me",
+        B:"Sometimes I feel it, sometimes not",
+        C:"I appreciate good aesthetics, but life isn’t that deep — it’s about what works" },
+      { q:"Do you remember your childhood?",
+        A:"Almost everything",
+        B:"Some things",
+        C:"Not really — I live in the present, no need to overanalyze the past" },
+      { q:"If someone you want is already in a relationship, what do you truly believe?",
+        A:"If they were connected to my soul, they wouldn’t be with someone else — I don’t take what isn’t mine",
+        B:"I try to respect it, but emotions can get confusing",
+        C:"If two people click, it’s fair — you shouldn’t limit yourself because of someone else’s relationship" },
+      { q:"Sitting in an office job, you feel:",
+        A:"Trapped — I want to escape",
+        B:"Bad, but I try to enjoy parts (people, money, stability)",
+        C:"Stable — structure and routine help me stay productive" },
+      { q:"How do relationships fit into your soul life?",
+        A:"I connect with very few — when I do, it’s real and rare",
+        B:"I have some people I trust, still searching",
+        C:"I get along with everyone — staying social makes life smoother" },
+      { q:"Your friend did something wrong. You don’t want a fight, so what do you do?",
+        A:"I eventually tell them — I can’t keep that inside",
+        B:"I try to tell them — it wouldn’t sit right",
+        C:"I avoid unnecessary conflict — some things just aren’t worth addressing" },
+      { q:"Do little children and animals look at you or gravitate to you more than others?",
+        A:"Yeah — it’s weird",
+        B:"Yes, often",
+        C:"Not really — they act like that with most people" },
+      { q:"Do you act childish with your closest people?",
+        A:"Yes — sometimes we go crazy",
+        B:"Only when no one sees",
+        C:"No — I prefer staying mature and composed" },
+      { q:"When your inner voice says “don’t do this,” what do you usually do?",
+        A:"I listen — even if it complicates things",
+        B:"I try to balance it with logic",
+        C:"I go with what makes the most sense practically — intuition isn’t always reliable" },
+      { q:"When you feel something is “off” with someone, what do you do?",
+        A:"I trust the feeling — my soul senses things",
+        B:"I observe more",
+        C:"I ignore it — judging people based on feelings isn’t fair" },
+      { q:"When you want someone to like you, what’s your natural behaviour?",
+        A:"I stay as I am — the right people feel me",
+        B:"I adjust a bit, but not too much",
+        C:"I present my best version — connection is easier when you manage impressions" },
+      { q:"If someone succeeds where you wanted to succeed, what do you feel?",
+        A:"Inspiration — it shows what’s possible",
+        B:"Mixed feelings",
+        C:"Motivation to compete — healthy competition pushes progress" },
+      { q:"When you hear something that feels true but uncomfortable, how do you react?",
+        A:"It hits deep — I know it’s for me",
+        B:"I think about it later",
+        C:"I question it — emotional truths can be exaggerated" },
+      { q:"Do you ever get sudden inner knowing about people or situations?",
+        A:"Yes — it feels like remembering",
+        B:"Sometimes, but I’m unsure",
+        C:"No — I prefer things I can explain or prove" },
+      { q:"Religion is…",
+        A:"All religions try to explain something higher",
+        B:"I follow a religion, but I still question things and try to understand it in my own way",
+        C:"There is only one true religion / or there is no higher force at all — it’s just people’s beliefs" },
+      { q:"How do you feel when something you want is taking longer than expected?",
+        A:"I trust the timing — some things need alignment",
+        B:"I get frustrated but try to stay hopeful",
+        C:"I take control — waiting is for people who don’t know what they want" },
+      { q:"If everyone forgot who you were tomorrow, what would you do?",
+        A:"I’d rebuild from my core — the real me doesn’t depend on memory",
+        B:"I’d be confused, but I’d try to find myself again",
+        C:"I’d adapt — identity is something you shape based on your environment" }
+    ];
+
+    let indexQ = 0;
+    const answers = [];
+    const qText = document.getElementById("q-text");
+    const qCounter = document.getElementById("q-counter");
+    const list = document.getElementById("answer-list");
+
+    function flashBtn(el){
+      if(!el) return;
+      el.classList.remove("flash");
+      void el.offsetWidth;
+      el.classList.add("flash");
+      setTimeout(()=>el.classList.remove("flash"), 420);
+    }
+
+    function renderQuestion(){
+      const item = protoQuestions[indexQ];
+      qCounter.textContent = `Question ${indexQ+1} / ${protoQuestions.length}`;
+      qText.textContent = item.q;
+      list.innerHTML = "";
+
+      ["A","B","C"].forEach(letter=>{
+        const label = document.createElement("label");
+        label.className = "option";
+        const id = `q${indexQ}-${letter}`;
+        label.innerHTML =
+          `<input type="radio" id="${id}" name="q${indexQ}" value="${letter}">` +
+          `<span><strong>${letter}.</strong> ${item[letter]}</span>`;
+        list.appendChild(label);
+      });
+
+      if(answers[indexQ]){
+        const input = document.querySelector(`input[name="q${indexQ}"][value="${answers[indexQ]}"]`);
+        if(input) input.checked = true;
+      }
+    }
+
+    function nextQuestion(){
+      flashBtn(document.getElementById("btnNext"));
+      const selected = document.querySelector(`input[name="q${indexQ}"]:checked`);
+      if(!selected){
+        qCounter.textContent = `Question ${indexQ+1} / ${protoQuestions.length} · pick A/B/C`;
+        return;
+      }
+      answers[indexQ] = selected.value;
+      if(indexQ < protoQuestions.length - 1){
+        indexQ++;
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function prevQuestion(){
+      flashBtn(document.getElementById("btnBack"));
+      if(indexQ === 0){
+        window.location.href = "index.html";
+        return;
+      }
+      const selected = document.querySelector(`input[name="q${indexQ}"]:checked`);
+      if(selected) answers[indexQ] = selected.value;
+      indexQ--;
+      renderQuestion();
+    }
+
+    function setBattery(state){
+      const fill = document.getElementById("battery-fill");
+
+      // short vertical fill (% height)
+      let pct = 0;
+      if(state === "good"){ pct = 88; fill.style.background = "var(--good)"; }
+      if(state === "mid"){  pct = 58; fill.style.background = "var(--mid)"; }
+      if(state === "bad"){  pct = 24; fill.style.background = "var(--bad)"; }
+
+      fill.style.height = pct + "%";
+    }
+
+    // ---------- TREE: brown trunk + roots + leaf shapes (color changes by state) ----------
+    function treeSVG(state){
+      // state controls density + blossoms vs leaves
+      const dense = state === "good";
+      const medium = state === "mid";
+      const sparse = state === "bad";
+
+      const blossomOpacity = dense ? 0.95 : medium ? 0.35 : 0.12;
+      const leafOpacity    = (dense ? 0.92 : medium ? 0.86 : 0.55) * 0.7;
+
+      const leafCount = dense ? 36 : medium ? 28 : 14;
+      const blossomCount = dense ? 18 : medium ? 8 : 3;
+
+      // deterministic-ish positions (so it looks stable)
+      const leafPositions = [
+        [210,250,1.05],[250,220,0.95],[300,205,1.08],[355,215,1.00],[415,230,0.95],[470,255,1.06],[520,295,1.00],
+        [180,330,1.03],[240,325,0.96],[305,315,1.02],[360,305,0.98],[430,315,1.03],[500,335,1.02],[560,365,0.96],
+        [215,430,1.00],[275,445,0.95],[340,450,1.05],[420,452,0.98],[495,445,1.03],[555,430,0.94],
+        [260,520,1.00],[340,540,0.95],[435,540,1.00],[520,520,0.96],
+        [170,390,0.95],[600,405,0.95],[150,300,0.92],[610,300,0.92],
+        [300,260,0.90],[400,270,0.90],[285,380,0.88],[455,385,0.88],[325,410,0.86],[510,410,0.86]
+      ];
+
+      const blossomPositions = [
+        [235,210,22],[320,190,26],[405,210,22],[490,255,20],[180,330,22],[300,300,26],[440,310,24],[560,360,20],
+        [260,440,20],[360,440,24],[500,445,20],[340,540,18],[520,520,16],[150,300,18],[610,300,18],[600,405,16],
+        [170,390,16],[420,250,18]
+      ];
+
+      // move static canopy leaves 30% lower
+      const leaves = leafPositions.slice(0, leafCount).map(([x,y,s], i)=>{
+        const cls = ["leafWiggle", "leafWiggle s2", "leafWiggle s3", "leafWiggle s4"][i % 4];
+        const rot = (i%2===0? -18: 16) + (i%5)*2;
+        const y2 = Math.round(y * 1.3); // move 30% down
+        return `
+          <g class="${cls}" transform="translate(${x} ${y2}) rotate(${rot}) scale(${s})" opacity="${leafOpacity}">
+            <use href="#leafShape" />
+          </g>`;
+      }).join("");
+
+      const blossoms = blossomPositions.slice(0, blossomCount).map(([x,y,r], i)=>{
+        const cls = ["leafWiggle", "leafWiggle s2", "leafWiggle s3"][i % 3];
+        return `<circle class="${cls}" cx="${x}" cy="${y}" r="${r}" fill="url(#blossom)" opacity="${blossomOpacity}"/>`;
+      }).join("");
+
+      // when sparse (bad state) create up to 20 falling L-shaped leaves, concentrated left/center of the canopy
+      let falling = "";
+      if(sparse){
+        const pieces = [];
+        let created = 0;
+        let tries = 0;
+        const MAX_TRIES = 300; // safety guard to avoid infinite loops
+        while(created < 20 && tries < MAX_TRIES){
+          tries++;
+          // more centered start X and LOWER start Y so leaves originate from the canopy area
+          const x = 170 + Math.round(Math.random() * 220); // 170 -> 390 (inside canopy)
+          const y = 180 + Math.round(Math.random() * 120); // start LOWER than before
+
+          // avoid a stray cluster/top-left artifact (skip and retry)
+          if(x < 150 && y < 140){ i--; continue; }
+
+          // durations 20% slower
+          const dur = ((6 + Math.random() * 8) * 1.2).toFixed(2); // 6s-14s *1.2
+          const delay = (Math.random() * 5).toFixed(2);
+          const scale = (0.6 + Math.random() * 0.9).toFixed(2);
+          const color = Math.random() < 0.5 ? '#ffd400' : '#ff294d'; // bright yellow or red
+
+          // 20% less opacity (relative)
+          const baseOp = 0.9 + Math.random() * 0.08;
+          const op = (baseOp * 0.8).toFixed(2);
+
+          pieces.push(`<g class="fallingLeaf" style="--tx:${x}px; --ty:${y}px; --s:${scale}; animation-duration:${dur}s; animation-delay:${delay}s; opacity:${op};"><use href="#leafL" fill="${color}" stroke="rgba(0,0,0,.08)" stroke-width="0.5"/></g>`);
+          created++;
+        }
+        // fallback: if none created (extremely unlikely), create a single safe leaf to keep layout visible
+        if(pieces.length === 0){
+          pieces.push(`<g class="fallingLeaf" style="--tx:260px; --ty:260px; --s:0.9; animation-duration:10s; opacity:0.7;"><use href="#leafL" fill="#ff294d" stroke="rgba(0,0,0,.08)" stroke-width="0.5"/></g>`);
+        }
+        falling = `<g>${pieces.join("")}</g>`;
+      }
+
+      // good adds a bit of pink aura
+      const aura = dense ? `<circle cx="470" cy="240" r="260" fill="rgba(77,163,255,.12)" opacity=".85"/>` :
+                  medium ? `<circle cx="470" cy="240" r="260" fill="rgba(255,210,77,.10)" opacity=".85"/>` :
+                           `<circle cx="500" cy="240" r="290" fill="rgba(255,77,109,.10)" opacity=".85"/>`;
+
+      return `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 920" role="img" aria-label="Tree">
+        <defs>
+          <linearGradient id="bark" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stop-color="rgba(140,90,45,.55)"/>
+            <stop offset="55%" stop-color="rgba(95,58,28,.42)"/>
+            <stop offset="100%" stop-color="rgba(55,30,12,.35)"/>
+          </linearGradient>
+          <linearGradient id="barkHi" x1="0" x2="1">
+            <stop offset="0" stop-color="rgba(255,255,255,.03)"/>
+            <stop offset="50%" stop-color="rgba(255,255,255,.12)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,.03)"/>
+          </linearGradient>
+          <radialGradient id="blossom" cx="50%" cy="50%" r="62%">
+            <stop offset="0" stop-color="#ff7dd7" stop-opacity=".72"/>
+            <stop offset="70%" stop-color="#ff7dd7" stop-opacity=".18"/>
+            <stop offset="100%" stop-color="#ff7dd7" stop-opacity="0"/>
+          </radialGradient>
+
+          <!-- canopy leaf -->
+          <path id="leafShape" d="M0 -26
+            C 20 -26 32 -8 24 10
+            C 16 28 -4 34 -20 22
+            C -38 8 -28 -10 -8 -22
+            C -5 -24 -3 -26 0 -26 Z" />
+
+          <!-- L-shaped falling leaf (used for animated falling leaves) -->
+          <path id="leafL" d="M0 -16
+            C 12 -24 34 -18 44 -8
+            C 40 -4 34 2 28 6
+            C 18 14 6 18 -6 12
+            C -18 4 -12 -2 -6 -6
+            C -2 -10 -1 -14 0 -16 Z" />
+        </defs>
+
+        <rect width="720" height="920" fill="rgba(0,0,0,0)"/>
+        ${aura}
+
+        <g class="treeSway">
+
+          <!-- roots -->
+          <path d="M320 885 C290 885 250 875 220 860" fill="none" stroke="url(#bark)" stroke-width="14" stroke-linecap="round" opacity=".9"/>
+          <path d="M400 885 C430 885 470 875 505 855" fill="none" stroke="url(#bark)" stroke-width="14" stroke-linecap="round" opacity=".9"/>
+          <path d="M360 885 C345 865 330 850 310 840" fill="none" stroke="url(#bark)" stroke-width="10" stroke-linecap="round" opacity=".75"/>
+          <path d="M360 885 C375 865 395 850 415 838" fill="none" stroke="url(#bark)" stroke-width="10" stroke-linecap="round" opacity=".75"/>
+
+          <!-- trunk -->
+          <path d="M360 885
+                   C350 820 338 760 345 700
+                   C356 610 402 560 412 490
+                   C428 385 392 300 370 240
+                   C348 182 352 140 372 110"
+                fill="none" stroke="url(#bark)" stroke-width="28" stroke-linecap="round"/>
+
+          <!-- trunk highlight -->
+          <path d="M372 850 C362 790 352 742 358 690 C372 600 410 550 420 480"
+                fill="none" stroke="url(#barkHi)" stroke-width="10" stroke-linecap="round" opacity=".7"/>
+
+          <!-- branches -->
+          <path d="M392 560 C490 535 575 470 635 380"
+                fill="none" stroke="url(#bark)" stroke-width="12" stroke-linecap="round" opacity=".85"/>
+          <path d="M360 585 C270 550 210 480 170 405"
+                fill="none" stroke="url(#bark)" stroke-width="12" stroke-linecap="round" opacity=".85"/>
+          <path d="M372 500 C425 460 460 420 480 360"
+                fill="none" stroke="url(#bark)" stroke-width="9" stroke-linecap="round" opacity=".72"/>
+          <path d="M340 520 C295 480 265 445 242 395"
+                fill="none" stroke="url(#bark)" stroke-width="9" stroke-linecap="round" opacity=".72"/>
+
+          <!-- canopy -->
+          <g class="canopySway">
+            ${yellowOverlay}
+
+            <!-- leaves (colored via CSS vars) -->
+            <g fill="var(--leaf1)">${leaves}</g>
+
+            <!-- blossoms -->
+            ${blossoms}
+          </g>
+
+          ${falling}
+        </g>
+      </svg>`;
+    }
+
+    function setTree(state){
+      const stage = document.getElementById("tree-stage");
+      const label = document.getElementById("tree-label");
+      stage.innerHTML = treeSVG(state);
+
+      if(state === "good") label.textContent = "HEALTHY · FULL BLOOM";
+      else if(state === "mid") label.textContent = "MEDIUM · GREEN/YELLOW";
+      else label.textContent = "SICK · LOSING LEAVES";
+    }
+
+    function showResult(){
+      let countA = 0, countB = 0, countC = 0;
+      answers.forEach(letter=>{
+        if(letter === "A") countA++;
+        else if(letter === "B") countB++;
+        else if(letter === "C") countC++;
+      });
+
+      let shortLabel, titleBig, tagHTML, vibeHTML, batteryState;
+      let mainHTML, strengthHTML, guidanceHTML, points;
+
+      if(countA >= countB && countA >= countC){
+        batteryState = "good";
+        shortLabel = "🌟 HARMONISED SOUL RESULT";
+        titleBig = `Your soul is <span class="glow">fully alive</span>.`;
+        tagHTML = `<b>Alive</b> · awake · sensitive`;
+        vibeHTML = `Risk: <b>overgiving</b> / saving people`;
+
+        mainHTML = `
+          <h3>YOUR SOUL STATE</h3>
+          <p>
+            You see things others don’t. You feel meaning and pattern. Your system isn’t “too much” — it’s
+            <span class="hi">online</span>.
+          </p>
+        `;
+        strengthHTML = `
+          <h3>YOUR STRENGTHS</h3>
+          <p>
+            Fast reads, deep truth, real connection. When you’re aligned, life starts
+            <span class="hi">responding</span>.
+          </p>
+        `;
+        points = [
+          "You read energy instantly",
+          "You see people’s true selves",
+          "You feel truth in your body",
+          "Animals/kids notice your frequency",
+          "You can’t lie to yourself for long",
+          "You form rare, deep bonds"
+        ];
+        guidanceHTML = `
+          <h3>GUIDANCE</h3>
+          <p>
+            Alive souls often think: <span class="hi">“I can fix them.”</span> No. You can inspire — you cannot carry.
+            Protect your frequency. Your power is real, but not unlimited.
+          </p>
+        `;
+
+      } else if(countB >= countA && countB >= countC){
+        batteryState = "mid";
+        shortLabel = "🌙 ALIGNING SOUL RESULT";
+        titleBig = `You’re <span class="glow">waking up</span>, not stable yet.`;
+        tagHTML = `<b>Open</b> · searching · inconsistent`;
+        vibeHTML = `Theme: <b>transition</b> / rewiring`;
+
+        mainHTML = `
+          <h3>YOUR SOUL STATE</h3>
+          <p>
+            One foot in depth, one foot in survival. You feel “something more” — but you still doubt it.
+            You’re in a <span class="hi">change window</span>.
+          </p>
+        `;
+        strengthHTML = `
+          <h3>YOUR STRENGTHS</h3>
+          <p>
+            You question. You grow fast. Your intuition is there — it just needs repetition to become sharp.
+          </p>
+        `;
+        points = [
+          "Open + curious mind",
+          "You feel ‘something more’",
+          "You want real love",
+          "Intuition exists (trust is missing)",
+          "You’re learning your signals",
+          "You’re becoming yourself"
+        ];
+        guidanceHTML = `
+          <h3>GUIDANCE</h3>
+          <p>
+            Stop splitting yourself in two. Choose what feels <span class="hi">real</span> — even if no one gets it yet.
+          </p>
+        `;
+
+      } else {
+        batteryState = "bad";
+        shortLabel = "⚫ DISTORTED SOUL RESULT";
+        titleBig = `Your soul is not broken — it’s <span class="glow">tired</span>.`;
+        tagHTML = `<b>Suppressed</b> · survival-mode`;
+        vibeHTML = `Needs: <b>reboot</b> / softness`;
+
+        mainHTML = `
+          <h3>YOUR SOUL STATE</h3>
+          <p>
+            This isn’t coldness. It’s protection. Quiet doesn’t mean empty — it means <span class="hi">shielded</span>.
+          </p>
+        `;
+        strengthHTML = `
+          <h3>WHAT THIS REALLY MEANS</h3>
+          <p>
+            You’re not doomed. This is an invitation — awareness is the first step.
+          </p>
+        `;
+        points = [
+          "You adapted to survive",
+          "Numbness can mimic peace",
+          "Meaning can feel distant",
+          "You may build ‘stable but hollow’",
+          "The spark can return",
+          "Small steps work best"
+        ];
+        guidanceHTML = `
+          <h3>GUIDANCE</h3>
+          <p>
+            Start small: listen once a day. Choose 1 real person over 10 surface ones.
+            Let emotions exist without judging them.
+          </p>
+        `;
+      }
+
+      // set theme
+      document.documentElement.dataset.state = batteryState;
+
+      // show result UI
+      document.getElementById("quiz-shell").style.display = "none";
+      const resultShell = document.getElementById("result-shell");
+      resultShell.classList.add("active");
+
+      document.getElementById("result-short").textContent = shortLabel;
+      document.getElementById("result-title").innerHTML = titleBig;
+      document.getElementById("result-tag").innerHTML = tagHTML;
+      document.getElementById("result-vibe").innerHTML = vibeHTML;
+
+      document.getElementById("sec-main").innerHTML = mainHTML;
+      document.getElementById("sec-strength").innerHTML = strengthHTML;
+      document.getElementById("sec-guidance").innerHTML = guidanceHTML;
+
+      const ul = document.getElementById("result-points");
+      ul.innerHTML = "";
+      points.forEach(p=>{
+        const li = document.createElement("li");
+        li.innerHTML = `<div class="dot"></div><span>${p}</span>`;
+        ul.appendChild(li);
+      });
+
+      document.getElementById("score-line").textContent = `A:${countA} · B:${countB} · C:${countC}`;
+
+      setBattery(batteryState);
+      setTree(batteryState);
+
+      ["btnHome","btnRetake"].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el){
+          el.addEventListener("click", ()=>flashBtn(el), { once:true });
+        }
+      });
+    }
+
+    // init
+    renderQuestion();
+  </script>
+</body>
+</html>

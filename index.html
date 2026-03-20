@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Soul Interface · Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+      background:
+  radial-gradient(circle at 30% 18%, rgba(10, 19, 50, 0.35), transparent 45%),
+  radial-gradient(circle at 70% 28%, rgba(10, 18, 49, 0.25), transparent 50%),
+  linear-gradient(
+    to bottom,
+    #0b0b1a 0%,
+    #000000 40%,
+    #070714 70%,
+    #000000 100%
+  );
+
+      color:#f5f7ff;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:32px;
+      overflow:hidden;
+    }
+
+    body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 2px);
+  background-size:120px 120px;
+  opacity:0.04;
+  pointer-events:none;
+}
+
+
+    .hologram {
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center,
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(180, 120, 255, 0.25) 25%,
+      rgba(80, 120, 255, 0.18) 45%,
+      rgba(20, 30, 60, 0.05) 65%,
+      transparent 75%
+    );
+  filter: blur(0.2px);
+  box-shadow:
+    0 0 60px rgba(180, 120, 255, 0.35),
+    inset 0 0 40px rgba(255, 255, 255, 0.15);
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
+.hologram {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      font-size:11px;
+      letter-spacing:0.22em;
+      text-transform:uppercase;
+      color:rgba(220,230,255,0.65);
+      margin-bottom:20px;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(0,0.95fr) minmax(0,1.05fr);
+      gap:40px;
+      align-items:center;
+    }
+
+   /* === SOUL FIELD — CLEAN RESET (NOT EGG, NOT DARK) === */
+
+.holo-wrap{
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px 0;
+}
+
+.holo{
+  width:280px;
+  height:360px;
+
+  /* more round (less tall capsule) */
+  border-radius:50% / 56%;
+
+  position:relative;
+  overflow:hidden;
+
+  /* stronger colors */
+  background:
+    radial-gradient(circle at 50% 84%, rgba(120,255,210,1), transparent 58%),
+    radial-gradient(circle at 32% 20%, rgba(255,170,230,0.72), transparent 60%),
+    radial-gradient(circle at 72% 22%, rgba(180,230,255,0.72), transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(235,245,255,0.35), rgba(10,14,30,0.55) 78%);
+
+  box-shadow:
+    0 0 110px rgba(120,255,210,0.70),
+    0 0 170px rgba(255,170,230,0.50),
+    0 0 190px rgba(180,230,255,0.45);
+
+  /* smooth motion */
+  animation: soulFloat 10s ease-in-out infinite;
+
+  filter: saturate(1.35) brightness(1.08);
+
+}
+
+
+/* soft glass shimmer */
+.holo::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255,170,230,0.14), transparent 60%),
+    radial-gradient(circle at 70% 40%, rgba(190,235,255,0.12), transparent 62%),
+    radial-gradient(circle at 50% 78%, rgba(170,255,230,0.16), transparent 60%);
+  opacity:0.85;
+  mix-blend-mode: normal;   /* IMPORTANT: removes weird overlay artifacts */
+  animation: driftSoft 14s cubic-bezier(.45,0,.2,1) infinite alternate;
+}
+
+
+
+
+/* subtle inner outline (not shell) */
+.holo::after{
+  content:"";
+  position:absolute;
+  inset:11%;
+  border-radius:50% / 60%;
+  border:1px solid rgba(235,245,255,0.13);
+  opacity:0.55;
+}
+
+
+
+/* soul particles */
+.holo-spark{
+  position:absolute;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,1), rgba(255,255,255,0) 70%);
+  box-shadow:0 0 16px rgba(255,255,255,0.7);
+  opacity:0.75;
+  mix-blend-mode:screen;
+  animation: floatInner 9s ease-in-out infinite;
+}
+.holo-spark.s1{ left:30%; top:32%; animation-delay:-2s;}
+.holo-spark.s2{ left:62%; top:44%; animation-delay:1.4s;}
+.holo-spark.s3{ left:46%; top:24%; animation-delay:3.6s;}
+
+/* base glow (no slab, no shadow) */
+.orbit{
+  position:absolute;
+  width:260px;
+  height:70px;
+  border-radius:50%;
+  bottom:-14px;
+  left:50%;
+  transform:translateX(-50%);
+  background:radial-gradient(circle at 50% 0,
+    rgba(170,255,240,0.95),
+    rgba(170,255,240,0.35) 45%,
+    transparent 80%);
+  filter:blur(16px);
+  opacity:0.95;
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
+
+
+/* animations */
+@keyframes soulFloat{
+  0%{transform:translateY(4px) scale(0.99);}
+  50%{transform:translateY(-10px) scale(1.01);}
+  100%{transform:translateY(1px) scale(1);}
+}
+@keyframes soulBreathe{
+  0%{filter:brightness(1) saturate(1);}
+  50%{filter:brightness(1.25) saturate(1.18);}
+  100%{filter:brightness(1) saturate(1);}
+}
+@keyframes shimmer{
+  0%,100%{transform:translateX(-18%);}
+  50%{transform:translateX(14%);}
+}
+@keyframes floatInner{
+  0%{transform:translate3d(-4px,5px,0);}
+  50%{transform:translate3d(5px,-6px,0);}
+  100%{transform:translate3d(-4px,5px,0);}
+  
+}
+
+
+
+    /* butterflies / particles */
+    .butterfly{
+      position:absolute;
+      width:18px;
+      height:14px;
+      border-radius:50%;
+      background:radial-gradient(circle,#ff9be8 0%,rgba(255,155,232,0) 70%);
+      filter:blur(0.5px);
+      mix-blend-mode:screen;
+      opacity:0;
+      animation:fly 18s linear infinite;
+      pointer-events:none;
+    }
+    .butterfly::before,
+    .butterfly::after{
+      content:"";
+      position:absolute;
+      width:12px;
+      height:10px;
+      border-radius:50%;
+      background:radial-gradient(circle,#ffd5ff 0%,rgba(255,213,255,0) 75%);
+      top:-3px;
+    }
+    .butterfly::before{ left:-7px; transform:rotate(-15deg);}
+    .butterfly::after{ right:-7px; transform:rotate(15deg);}
+
+    @keyframes fly{
+      0%{transform:translate3d(-40px,60px,0) scale(0.9);opacity:0;}
+      10%{opacity:.9;}
+      50%{transform:translate3d(80px,-80px,0) scale(1.05);}
+      90%{opacity:.4;}
+      100%{transform:translate3d(160px,-160px,0) scale(0.95);opacity:0;}
+    }
+
+    .b1{top:70%;left:6%;animation-delay:0s;}
+    .b2{top:82%;left:18%;animation-delay:4s;}
+    .b3{top:72%;left:30%;animation-delay:9s;}
+    .b4{top:80%;left:40%;animation-delay:13s;}
+
+    /* text + buttons */
+    h1{font-size:32px;margin-bottom:10px;}
+    .chip{
+      display:inline-flex;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(18,244,184,.5);
+      background:rgba(18,244,184,.08);
+      font-size:10px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:#b1ffe4;
+      margin-bottom:10px;
+    }
+    .sub{
+      font-size:14px;
+      color:rgba(218,227,255,0.78);
+      line-height:1.5;
+      margin-bottom:18px;
+    }
+    .buttons{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .btn{
+      border-radius:999px;
+      border:1px solid rgba(167,195,255,0.45);
+      background:transparent;
+      color:rgba(229,238,255,0.9);
+      padding:11px 20px;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
+    }
+    .btn-main{
+      border:none;
+      background:radial-gradient(circle at 0 0,#56fff6,#13d3ff);
+      color:#021019;
+      box-shadow:0 0 22px rgba(102,255,255,0.7);
+    }
+    .btn-main:hover{
+      filter:brightness(1.05);
+      box-shadow:0 0 30px rgba(132,255,255,0.9);
+    }
+    .btn:hover{transform:translateY(-1px);}
+    .hint{font-size:11px;color:rgba(184,201,236,0.8);margin-top:4px;}
+    .footer{
+      margin-top:22px;
+      font-size:10px;
+      color:rgba(166,184,229,0.7);
+    }
+
+    @media(max-width:900px){
+      .layout{grid-template-columns:1fr;}
+      .holo-wrap{order:-1;}
+    }
+    @media(max-width:640px){
+      body{padding:18px;}
+      .shell{padding:22px 16px 18px;}
+      h1{font-size:26px;}
+      .buttons{flex-direction:column;}
+      .btn,.btn-main{width:100%;}
+    }
+
+    .shell{
+  background:none !important;
+  box-shadow:none !important;
+}
+/* KILL ALL GHOST SHADOW / SLAB LAYERS */
+.shell::before, .shell::after,
+.holo-wrap::before, .holo-wrap::after{
+  content: none !important;
+  display: none !important;
+}
+
+.shell{
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.holo-wrap{
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- butterflies -->
+    <div class="butterfly b1"></div>
+    <div class="butterfly b2"></div>
+    <div class="butterfly b3"></div>
+    <div class="butterfly b4"></div>
+
+    <div class="top">
+      <span>SOUL INTERFACE · V0.1</span>
+      <span>PROTOTYPE SCANNER · PURPOSE &amp; HEALTH</span>
+    </div>
+
+    <div class="layout">
+      <div class="holo-wrap">
+        <div class="holo">
+          <div class="holo-back"></div>
+          <div class="holo-core"></div>
+          <div class="holo-ring"></div>
+          <div class="holo-spark s1"></div>
+          <div class="holo-spark s2"></div>
+          <div class="holo-spark s3"></div>
+        </div>
+        <div class="orbit"></div>
+      </div>
+
+      <div>
+  <div class="chip">FREE · GENTLE DIAGNOSTICS</div>
+
+  <h1>SOUL INTERFACE</h1>
+
+  <p class="sub">
+    Few small scans for unusual humans.<br />
+    Test 1 reads your <strong>purpose code</strong>.
+    Test 2 reads your <strong>soul health</strong>.
+    Start with purpose, then unlock the health layer with a code.
+  </p>
+
+  <div class="buttons">
+    <button class="btn btn-main"
+            onclick="window.location.href='purpose.html'">
+      TEST 1 · SOUL PURPOSE
+    </button>
+
+    <button class="btn"
+            onclick="openHealth()">
+      TEST 2 · SOUL HEALTH (CODE)
+    </button>
+
+    <button class="btn"
+            onclick="window.location.href='ORIGIN.html'">
+      TEST 3 · SOUL ORIGIN
+    </button>
+
+    <button class="btn"
+            onclick="window.location.href='beliefs.html'">
+      TEST 4 · SELF BELIEFS
+    </button>
+  </div>
+
+  <p class="hint">
+    No email needed to start.
+    At the end, you can choose if you want a deeper decode (~£5).
+  </p>
+</div>
+</div>
+
+<div class="footer">
+  THE ONLY TEST THAT SHOWS HOW YOUR INTERNAL SYSTEM IS BUILT
+</div>
+</div>
+
+<script>
+  function openHealth() {
+    const code = prompt("Enter access code for Soul Health test:");
+    if (code === null) return;
+
+    if (code.trim() === "0987") {
+      window.location.href = "health.html";
+    } else {
+      alert("Wrong code. Ask the creator for access.");
+    }
+  }
+</script>
+</body>
+</html>

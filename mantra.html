@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mantra Quiz</title>
+
+<style>
+:root{
+  --bg1:#050a1f;
+  --bg2:#060b22;
+
+  --violet:#8a5bff;
+  --pink:#ff5bd6;
+  --orange:#ff9a4d;
+  --green:#4dffb5;
+
+  --blue:#5fd0ff;
+  --blue2:#9ae6ff;
+
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.66);
+
+  --card:rgba(0,0,0,.24);
+  --stroke:rgba(255,255,255,.12);
+
+  --r:26px;
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+}
+
+*{ box-sizing:border-box; }
+
+html, body{ height:100%; }
+body{
+  margin:0;
+  font-family:var(--font);
+  color:var(--text);
+  background:
+    radial-gradient(900px 600px at 18% 10%, rgba(255,91,214,.10), transparent 55%),
+    radial-gradient(900px 600px at 82% 20%, rgba(138,91,255,.10), transparent 55%),
+    radial-gradient(800px 520px at 70% 82%, rgba(77,255,181,.06), transparent 60%),
+    linear-gradient(180deg, var(--bg1), var(--bg2));
+
+  /* ✅ allow scrolling */
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+/* ✅ always visible home button */
+.topBar{
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 12px 14px;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(5,10,31,.85), rgba(5,10,31,.30));
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.topInner{
+  width:min(920px,100%);
+  margin:0 auto;
+  display:flex;
+  justify-content:flex-end;
+}
+.homeBtn{
+  border-radius:999px;
+  padding:10px 14px;
+  border:1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.18);
+  color: rgba(255,255,255,.90);
+  text-decoration:none;
+  font-weight:900;
+  letter-spacing:.15px;
+}
+.homeBtn:hover{
+  border-color: rgba(255,91,214,.45);
+  background: rgba(255,255,255,.06);
+}
+
+/* 🔊 MORE VISIBLE PULSE MUSIC BACKGROUND */
+.pulseBg{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+}
+.pulseBg::before{
+  content:"";
+  position:absolute;
+  inset:-25%;
+  background:
+    radial-gradient(circle at 50% 55%, rgba(255,91,214,.35) 0%, transparent 30%),
+    radial-gradient(circle at 50% 55%, rgba(95,208,255,.28) 0%, transparent 40%),
+    radial-gradient(circle at 50% 55%, rgba(255,154,77,.22) 0%, transparent 50%),
+    radial-gradient(circle at 50% 55%, rgba(77,255,181,.18) 0%, transparent 60%);
+  filter: blur(14px);
+  opacity:.85;
+  transform: scale(1);
+  animation: bgPulse 2.35s ease-in-out infinite;
+}
+.pulseBg::after{
+  content:"";
+  position:absolute;
+  inset:-35%;
+  background:
+    repeating-radial-gradient(circle at 50% 55%,
+      rgba(255,255,255,.10) 0px,
+      rgba(255,255,255,.10) 1px,
+      transparent 12px,
+      transparent 24px);
+  opacity:.18;
+  filter: blur(.6px);
+  animation: ringPulse 2.35s ease-in-out infinite;
+}
+@keyframes bgPulse{
+  0%,100%{ transform: scale(1); opacity:.72; }
+  50%{ transform: scale(1.10); opacity:1; }
+}
+@keyframes ringPulse{
+  0%,100%{ transform: scale(1); opacity:.12; }
+  50%{ transform: scale(1.06); opacity:.24; }
+}
+
+/* 🎶 FEW NOTES */
+#notes{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+}
+.note{
+  position:absolute;
+  font-weight:900;
+  opacity:0;
+  animation: floatUp linear forwards;
+  user-select:none;
+  filter: drop-shadow(0 0 22px rgba(255,91,214,.55));
+}
+@keyframes floatUp{
+  0%{ opacity:0; transform:translateY(30px) scale(.95); }
+  18%{ opacity:.90; }
+  100%{ opacity:0; transform:translateY(-240px) scale(1.12); }
+}
+
+/* layout */
+.wrap{
+  position:relative;
+  z-index:2;
+  min-height: calc(100vh - 70px);
+  display:grid;
+  place-items:center;
+  padding:18px 14px 40px;
+}
+
+.outerCard{
+  width:min(920px,100%);
+  background:rgba(0,0,0,.18);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:32px;
+  padding:16px;
+  box-shadow: 0 26px 90px rgba(0,0,0,.55);
+}
+
+/* “speaker” container */
+.speaker{
+  position:relative;
+  border-radius:26px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(280px 280px at 18% 30%, rgba(255,91,214,.20), transparent 60%),
+    radial-gradient(320px 260px at 86% 28%, rgba(255,154,77,.18), transparent 62%),
+    radial-gradient(280px 280px at 62% 82%, rgba(77,255,181,.12), transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.18));
+  overflow:hidden;
+}
+.speaker::before{
+  content:"";
+  position:absolute;
+  inset:-140px;
+  background: radial-gradient(circle at 50% 55%,
+    rgba(95,208,255,.26) 0%,
+    rgba(95,208,255,.10) 18%,
+    transparent 44%,
+    rgba(255,91,214,.14) 56%,
+    transparent 76%);
+  opacity:.65;
+  filter: blur(14px);
+  pointer-events:none;
+  animation: speakerPulse 2.0s ease-in-out infinite;
+}
+@keyframes speakerPulse{
+  0%,100%{ transform: scale(1); }
+  50%{ transform: scale(1.06); }
+}
+
+/* equalizer */
+.eq{
+  position:absolute;
+  right:14px;
+  top:14px;
+  display:flex;
+  gap:6px;
+  opacity:.95;
+}
+.eq span{
+  width:6px;
+  height:20px;
+  border-radius:999px;
+  background: linear-gradient(180deg, rgba(255,91,214,.98), rgba(95,208,255,.88), rgba(77,255,181,.76));
+  box-shadow: 0 0 18px rgba(255,91,214,.25);
+  animation: eq 1.05s ease-in-out infinite;
+}
+.eq span:nth-child(2){ animation-delay:.10s; }
+.eq span:nth-child(3){ animation-delay:.18s; }
+.eq span:nth-child(4){ animation-delay:.28s; }
+@keyframes eq{
+  0%,100%{ transform: scaleY(.75); opacity:.70; }
+  50%{ transform: scaleY(1.95); opacity:1; }
+}
+
+h1{
+  margin:0 0 6px;
+  font-size:30px;
+  letter-spacing:.2px;
+  color: var(--pink);
+  text-shadow: 0 0 28px rgba(255,91,214,.22);
+}
+.sub{
+  margin:0 0 14px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.55;
+}
+
+.q{ font-size:22px; margin: 10px 0 14px; }
+
+.answers{ display:grid; gap:10px; }
+
+.btn{
+  border-radius:16px;
+  padding:14px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);
+  color:var(--text);
+  cursor:pointer;
+  text-align:left;
+  transition:.15s;
+}
+.btn:hover{ background:rgba(255,255,255,.10); }
+.btn.selected{
+  background: linear-gradient(180deg, rgba(255,91,214,.24), rgba(138,91,255,.18));
+  border-color: rgba(255,91,214,.70);
+  box-shadow: 0 0 0 1px rgba(255,91,214,.14) inset, 0 0 22px rgba(255,91,214,.30);
+}
+
+/* nav */
+.nav{
+  display:flex;
+  justify-content:space-between;
+  margin-top:16px;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.pill{
+  border-radius:999px;
+  padding:12px 16px;
+  border:1px solid rgba(255,255,255,.16);
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+  font-weight:900;
+  letter-spacing:.15px;
+}
+.pillPink{
+  background: linear-gradient(90deg, rgba(255,91,214,.26), rgba(255,154,77,.18));
+  border-color: rgba(255,91,214,.70);
+  box-shadow: 0 12px 34px rgba(255,91,214,.12);
+}
+.pill:disabled{ opacity:.4; cursor:not-allowed; }
+
+/* packages as “buttons/cards” with different vibes */
+.pkgGrid{
+  display:grid;
+  gap:12px;
+  margin-top: 10px;
+}
+.pkgBtn{
+  border:none;
+  cursor:pointer;
+  text-align:left;
+  padding:16px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  transition: transform .12s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+  position:relative;
+  overflow:hidden;
+}
+.pkgBtn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.26); background: rgba(255,255,255,.08); }
+.pkgBtn.selected{
+  transform:none;
+  border-color: rgba(255,91,214,.75);
+  box-shadow: 0 0 0 1px rgba(255,91,214,.18) inset, 0 0 30px rgba(255,91,214,.22);
+}
+
+.pkgTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:10px;
+}
+.pkgLeft{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.pkgName{
+  font-weight:1000;
+  letter-spacing:.2px;
+  line-height:1.05;
+}
+.pkgPrice{
+  font-weight:1000;
+  white-space:nowrap;
+}
+.pkgDesc{
+  margin:0;
+  line-height:1.55;
+  white-space: pre-line;
+}
+
+/* different type sizes */
+.pkg-essential .pkgName{ font-size:18px; color: rgba(255,200,245,.98); }
+.pkg-premium  .pkgName{ font-size:19px; color: rgba(210,235,255,.98); }
+.pkg-signature .pkgName{ font-size:20px; color: rgba(190,230,255,.98); }
+
+.pkg-essential .pkgPrice{ font-size:18px; color: rgba(255,91,214,.96); }
+.pkg-premium  .pkgPrice{ font-size:18px; color: rgba(95,208,255,.95); }
+.pkg-signature .pkgPrice{ font-size:19px; color: rgba(95,208,255,.98); }
+
+.pkg-essential .pkgDesc{ font-size:13px; color: rgba(255,255,255,.80); }
+.pkg-premium  .pkgDesc{ font-size:13px; color: rgba(255,255,255,.78); }
+.pkg-signature .pkgDesc{ font-size:14px; color: rgba(255,255,255,.82); }
+
+.pkg-essential{
+  background:
+    radial-gradient(420px 220px at 18% 0%, rgba(255,91,214,.22), transparent 58%),
+    radial-gradient(360px 240px at 100% 70%, rgba(255,154,77,.14), transparent 62%),
+    rgba(255,255,255,.05);
+}
+.pkg-premium{
+  background:
+    radial-gradient(460px 240px at 16% 0%, rgba(95,208,255,.20), transparent 62%),
+    radial-gradient(360px 220px at 92% 75%, rgba(77,255,181,.10), transparent 62%),
+    rgba(255,255,255,.05);
+}
+.pkg-signature{
+  background:
+    radial-gradient(520px 260px at 20% 0%, rgba(95,208,255,.26), transparent 64%),
+    radial-gradient(420px 260px at 88% 35%, rgba(138,91,255,.14), transparent 64%),
+    rgba(255,255,255,.05);
+}
+
+/* 🧠 brain icon */
+.brain{
+  width:44px;
+  height:44px;
+  flex:0 0 44px;
+  filter: drop-shadow(0 0 18px rgba(255,91,214,.18));
+}
+.brain.pink { filter: drop-shadow(0 0 18px rgba(255,91,214,.35)); }
+.brain.blue { filter: drop-shadow(0 0 18px rgba(95,208,255,.35)); }
+.brain.blueFull { filter: drop-shadow(0 0 22px rgba(95,208,255,.50)); }
+
+.small{
+  margin-top:12px;
+  color: rgba(255,255,255,.62);
+  font-size:12px;
+  line-height:1.55;
+  white-space:pre-line;
+}
+
+.emailBox{
+  margin-top: 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.16);
+  padding: 14px;
+}
+.emailTitle{
+  margin:0 0 8px;
+  font-weight: 1000;
+  letter-spacing:.2px;
+  font-size: 16px;
+  color: rgba(255,255,255,.92);
+}
+.emailHint{
+  margin:0 0 12px;
+  color: rgba(255,255,255,.70);
+  font-size: 13px;
+  line-height: 1.5;
+}
+input{
+  width:100%;
+  padding:14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,0,.25);
+  color:var(--text);
+  outline:none;
+  font-size: 14px;
+}
+input:focus{
+  border-color: rgba(255,91,214,.55);
+  box-shadow: 0 0 0 3px rgba(255,91,214,.14);
+}
+</style>
+</head>
+
+<body>
+<div class="pulseBg"></div>
+<div id="notes"></div>
+
+<div class="topBar">
+  <div class="topInner">
+    <a class="homeBtn" href="index.html">Home</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="outerCard">
+    <div class="speaker">
+      <div class="eq" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div id="app"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 🎶 FEW notes (not spammy) */
+const notesLayer = document.getElementById("notes");
+function noteColor(){
+  const colors = [
+    "rgba(138, 91, 255, 0.95)",
+    "rgba(255, 91, 214, 0.95)",
+    "rgba(255, 154, 77, 0.92)",
+    "rgba(77, 255, 181, 0.86)",
+    "rgba(95, 208, 255, 0.92)"
+  ];
+  return colors[Math.floor(Math.random()*colors.length)];
+}
+setInterval(()=>{
+  if(Math.random() < 0.70) return; // fewer notes
+  const n = document.createElement("div");
+  n.className="note";
+  n.textContent=["♪","♫","♬","♩"][Math.floor(Math.random()*4)];
+  n.style.left=(18 + Math.random()*64) + "vw";
+  n.style.bottom="-40px";
+  n.style.fontSize=(24 + Math.random()*14) + "px";
+  n.style.color = noteColor();
+  n.style.textShadow = "0 0 34px rgba(255,91,214,.65)";
+  n.style.animationDuration=(4.0 + Math.random()*2.2) + "s";
+  notesLayer.appendChild(n);
+  setTimeout(()=>n.remove(),9000);
+},620);
+
+/* QUIZ */
+const QUESTIONS=[
+  { q:"What type of music do you feel most drawn to?",
+    a:["Rock / alternative","Soul / R&B","Pop","Ambient / ethereal","Electronic / minimal","Cinematic / emotional"]
+  },
+  { q:"How should the mantra feel?",
+    a:["Slow, deep, grounding","Medium — flowing and steady","Faster — energising"]
+  },
+  { q:"What emotional tone feels right right now?",
+    a:["Happy & light","Calm & reassuring","Emotional & deep","Soft, neutral, steady"]
+  }
+];
+
+const PACKAGES=[
+  {
+    key:"Essential",
+    title:"1️⃣ Essential Mantra",
+    price:"£110",
+    cls:"pkg-essential",
+    brain:"pink",
+    desc:`You will receive:
+• your current beliefs + new supportive beliefs
+• mantra written specifically for you
+• music in your chosen style
+• designed to loop and be listened to daily
+
+Simple, effective, powerful.`
+  },
+  {
+    key:"Premium",
+    title:"2️⃣ Premium Mantra",
+    price:"£150",
+    cls:"pkg-premium",
+    brain:"blue",
+    desc:`Everything in Essential, plus:
+• choose the AI singing voice you want
+• smoother emotional flow
+• stronger subconscious impact
+
+Still very effective — just more tailored.`
+  },
+  {
+    key:"Signature",
+    title:"3️⃣ Signature Mantra (My Voice)",
+    price:"£300",
+    cls:"pkg-signature",
+    brain:"blueFull",
+    desc:`Everything in Premium, plus:
+• sung by a real human voice (me)
+• deeper emotional resonance
+• stronger nervous-system and frequency effect
+• feels more like connection than sound
+
+This is the most powerful option.`
+  }
+];
+
+const NEXT_TEXT = `🔁 What happens next
+
+You listen daily.
+You can sing along or just let it play.
+
+Over time, those new beliefs stop feeling “new” —
+they become normal.
+
+And when your inner code changes,
+your reality follows.`;
+
+let step=0;
+let stage="quiz"; // quiz → buy → done
+let answers=new Array(QUESTIONS.length).fill(null);
+let chosenKey=null;
+
+const app=document.getElementById("app");
+
+function brainSVG(mode){
+  // “pink brain”, “lighting up blue”, “full blue”
+  const fills = {
+    pink:      { base:"rgba(255,91,214,.88)", glow:"rgba(255,91,214,.55)", line:"rgba(255,220,245,.75)" },
+    blue:      { base:"rgba(95,208,255,.75)", glow:"rgba(95,208,255,.55)",  line:"rgba(230,250,255,.75)" },
+    blueFull:  { base:"rgba(95,208,255,.92)", glow:"rgba(95,208,255,.75)",  line:"rgba(230,250,255,.85)" }
+  }[mode] || { base:"rgba(255,255,255,.7)", glow:"rgba(255,255,255,.25)", line:"rgba(255,255,255,.7)" };
+
+  return `
+  <svg class="brain ${mode}" viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <radialGradient id="g${mode}" cx="45%" cy="35%" r="70%">
+        <stop offset="0%" stop-color="${fills.glow}" />
+        <stop offset="55%" stop-color="${fills.base}" />
+        <stop offset="100%" stop-color="rgba(0,0,0,0)" />
+      </radialGradient>
+    </defs>
+    <circle cx="32" cy="32" r="28" fill="rgba(0,0,0,.14)"/>
+    <path d="M26 14c-6 0-11 5-11 11v3c-3 2-5 6-5 10 0 7 6 12 13 12h4v-8h-2c-3 0-5-2-5-5 0-2 1-4 3-5v-6c0-3 2-5 5-5 2 0 4 1 5 3 1-2 3-3 5-3 3 0 5 2 5 5v6c2 1 3 3 3 5 0 3-2 5-5 5h-2v8h4c7 0 13-5 13-12 0-4-2-8-5-10v-3c0-6-5-11-11-11-3 0-6 1-8 4-2-3-5-4-8-4z"
+      fill="url(#g${mode})" />
+    <path d="M24 24c2-3 6-3 8 0m0 0c2-3 6-3 8 0M22 34c3-3 7-3 10 0m0 0c3-3 7-3 10 0M28 44c2-2 6-2 8 0"
+      fill="none" stroke="${fills.line}" stroke-width="2.2" stroke-linecap="round" opacity=".9"/>
+  </svg>`;
+}
+
+function render(){
+  if(stage==="quiz") renderQuiz();
+  if(stage==="buy") renderBuy();
+  if(stage==="done") renderDone();
+}
+
+function renderQuiz(){
+  const q=QUESTIONS[step];
+  app.innerHTML=`
+    <h1>Mantra Quiz</h1>
+    <p class="sub">Answer instinctively. No right choice.</p>
+
+    <div class="q">${q.q}</div>
+    <div class="answers">
+      ${q.a.map((t,i)=>`
+        <button class="btn ${answers[step]===i?'selected':''}" data-i="${i}" type="button">${t}</button>
+      `).join("")}
+    </div>
+
+    <div class="nav">
+      <button class="pill" id="back" type="button" ${step===0?'disabled':''}>Back</button>
+      <button class="pill pillPink" id="next" type="button" ${answers[step]==null?'disabled':''}>
+        ${step===QUESTIONS.length-1?'Continue':'Next'}
+      </button>
+      <a class="pill" href="index.html" style="text-decoration:none; display:inline-flex; align-items:center;">Home</a>
+    </div>
+  `;
+}
+
+function renderBuy(){
+  const emailPanel = chosenKey ? `
+    <div class="emailBox" id="emailBox">
+      <div class="emailTitle">Type your email</div>
+      <div class="emailHint">I’ll send your mantra details + next steps here.</div>
+      <input type="email" id="email" placeholder="you@email.com" />
+      <div class="nav" style="margin-top:12px;">
+        <button class="pill" id="back" type="button">Back</button>
+        <button class="pill pillPink" id="submit" type="button">Buy Mantra</button>
+        <a class="pill" href="index.html" style="text-decoration:none; display:inline-flex; align-items:center;">Home</a>
+      </div>
+      <div class="small">No spam. Just your mantra details.</div>
+    </div>
+  ` : `
+    <div class="emailBox" style="opacity:.85;">
+      <div class="emailTitle">Pick a package</div>
+      <div class="emailHint">Then it will ask you for your email.</div>
+    </div>
+  `;
+
+  app.innerHTML=`
+    <h1>Choose your personalised mantra experience</h1>
+    <p class="sub">Tap a package. It will instantly unlock the email box.</p>
+
+    <div class="pkgGrid">
+      ${PACKAGES.map(p=>`
+        <button class="pkgBtn ${p.cls} ${chosenKey===p.key?'selected':''}" data-pkg="${p.key}" type="button">
+          <div class="pkgTop">
+            <div class="pkgLeft">
+              ${brainSVG(p.brain)}
+              <div class="pkgName">${p.title}</div>
+            </div>
+            <div class="pkgPrice">${p.price}</div>
+          </div>
+          <p class="pkgDesc">${p.desc}</p>
+        </button>
+      `).join("")}
+    </div>
+
+    <div class="small">${NEXT_TEXT}</div>
+
+    ${emailPanel}
+
+    <div class="nav" style="margin-top:14px;">
+      <button class="pill" id="back" type="button">Back</button>
+      <a class="pill" href="index.html" style="text-decoration:none; display:inline-flex; align-items:center;">Home</a>
+    </div>
+  `;
+}
+
+function renderDone(){
+  app.innerHTML=`
+    <h1>Done ✨</h1>
+    <p class="sub">Saved. You’re in.</p>
+    <div class="small">Next step: connect this to payment + email sending.</div>
+    <div class="nav">
+      <a class="pill" href="index.html" style="text-decoration:none; display:inline-flex; align-items:center;">Home</a>
+      <button class="pill" id="back" type="button">Back</button>
+    </div>
+  `;
+}
+
+function scrollToEmail(){
+  const el = document.getElementById("emailBox");
+  if(!el) return;
+  // smooth scroll into view (works once scroll is enabled)
+  el.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+app.addEventListener("click", (e)=>{
+  const b = e.target.closest("button");
+  if(!b) return;
+
+  // select answer
+  if(b.dataset.i != null){
+    answers[step] = Number(b.dataset.i);
+    render();
+    return;
+  }
+
+  if(b.id==="next" && answers[step]!=null){
+    if(step < QUESTIONS.length-1) step++;
+    else stage="buy";
+    render();
+    return;
+  }
+
+  if(b.id==="back"){
+    if(stage==="quiz" && step>0) step--;
+    else if(stage==="buy"){ stage="quiz"; step=QUESTIONS.length-1; }
+    else if(stage==="done"){ stage="buy"; }
+    render();
+    return;
+  }
+
+  // package select (✅ immediately asks for email)
+  if(b.dataset.pkg){
+    chosenKey = b.dataset.pkg;
+    render();
+    setTimeout(scrollToEmail, 60);
+    return;
+  }
+
+  if(b.id==="submit"){
+    const email = (document.getElementById("email")?.value || "").trim();
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      alert("Please enter a valid email.");
+      return;
+    }
+
+    const pick = PACKAGES.find(p=>p.key===chosenKey);
+    const payload = {
+      email,
+      chosenPackage: pick ? { key: pick.key, title: pick.title, price: pick.price } : null,
+      musicStyle: QUESTIONS[0].a[answers[0]],
+      tempo: QUESTIONS[1].a[answers[1]],
+      tone: QUESTIONS[2].a[answers[2]],
+      answers
+    };
+
+    localStorage.setItem("mantraOrder", JSON.stringify(payload));
+    stage="done";
+    render();
+    return;
+  }
+});
+
+render();
+</script>
+</body>
+</html>

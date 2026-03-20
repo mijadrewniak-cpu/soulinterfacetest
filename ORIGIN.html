@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SOUL ORIGIN · Scan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg0:#02030a;
+      --bg1:#0b0f2b;
+
+      --ink: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+
+      --stroke: rgba(255,255,255,.16);
+      --stroke2: rgba(255,255,255,.22);
+
+      --pink:#ff40b0;
+      --pink2:#ff8ad4;
+      --cyan:#7cf5ff;
+      --mint:#7bffc7;
+
+      --shadow: 0 40px 120px rgba(0,0,0,.72);
+      --r: 30px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    body{
+      font-family: var(--font);
+      color: var(--ink);
+      min-height:100vh;
+      background: var(--bg0); /* solid dark blue */
+      overflow-x:hidden;
+    }
+
+    /* --- ambient aura (hidden to make background still) --- */
+    .aura{
+      display:none !important;
+      position: fixed;
+      inset: -30%;
+      pointer-events:none;
+      z-index:0;
+      filter: none;
+      animation: none !important;
+    }
+    @keyframes drift{
+      from{ transform: translateY(-34px) translateX(-18px) scale(1.02); opacity:.95; }
+      to{ transform: translateY(34px) translateX(18px) scale(1.04); opacity:.82; }
+    }
+
+    /* --- soft floating shapes (hidden to make background still) --- */
+    .shape-layer{
+      display:none !important;
+      position: fixed;
+      inset: 0;
+      pointer-events:none;
+      z-index: 0;
+      opacity: 0;
+      mix-blend-mode: screen;
+    }
+    .shape{
+      display:none !important;
+      position:absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 999px;
+      filter: none;
+      animation: none !important;
+    }
+    .s1{ left:-80px; top: 18%; animation-delay:-3s; transform: scale(1.05); }
+    .s2{ right:-90px; top: 10%; animation-delay:-9s; transform: scale(.95); }
+    .s3{ left: 12%; bottom:-120px; animation-delay:-14s; transform: scale(1.1); opacity:.55; }
+    .s4{ right: 14%; bottom:-140px; animation-delay:-6s; transform: scale(1.0); opacity:.50; }
+
+    @keyframes floaty{
+      0%{ transform: translate3d(0,0,0) scale(1); }
+      50%{ transform: translate3d(24px,-28px,0) scale(1.03); }
+      100%{ transform: translate3d(0,0,0) scale(1); }
+    }
+
+    /* background butterflies (hidden per request - still background) */
+    .butterfly-layer {
+      display: none !important;
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      animation: none !important;
+    }
+    .butterfly {
+      position: absolute;
+      width: 26px;
+      height: 18px;
+      border-radius: 60% 40% 60% 20%;
+      background: radial-gradient(circle at 30% 30%, #ffe6ff, var(--pink) 50%, transparent 70%);
+      box-shadow: 0 0 16px rgba(255,120,220,0.9);
+      opacity: 0.75;
+      filter: blur(0.2px);
+      animation: flutter 22s linear infinite;
+    }
+    .butterfly::before,
+    .butterfly::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 18px;
+      border-radius: 40% 60% 20% 60%;
+      background: radial-gradient(circle at 70% 30%, #fff0ff, var(--pink2) 55%, transparent 75%);
+      box-shadow: 0 0 12px rgba(255,120,220,0.9);
+    }
+    .butterfly::before { left: -18px; top: 0; transform-origin: right center; animation: wing 1.8s ease-in-out infinite; }
+    .butterfly::after  { right: -18px; top: 0; transform-origin: left center;  animation: wing 1.9s ease-in-out infinite; }
+    .b1 { left: 5%;  top: 75%; animation-delay: -3s; }
+    .b2 { left: 20%; top: 10%; animation-delay: -9s; }
+    .b3 { left: 70%; top: 15%; animation-delay: -15s; }
+    .b4 { left: 85%; top: 65%; animation-delay: -1s; }
+    .b5 { left: 40%; top: 50%; animation-delay: -19s; }
+    @keyframes flutter {
+      0%   { transform: translate3d(-10vw, 15vh, 0) scale(0.9); opacity: 0; }
+      10%  { opacity: 0.8; }
+      50%  { transform: translate3d(40vw, -40vh, 0) scale(1); }
+      100% { transform: translate3d(90vw, 5vh, 0) scale(0.9); opacity: 0; }
+    }
+    @keyframes wing { 0%, 100% { transform: rotateZ(6deg); } 50% { transform: rotateZ(-12deg); } }
+
+    /* --- layout wrapper --- */
+    .wrap{
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px 14px;
+    }
+
+    .shell{
+      width: min(1150px, 100%); /* wider shell to allow a more rectangular panel */
+      border-radius: var(--r);
+      border: 1px solid var(--stroke);
+      background: rgba(2,4,18,0.96); /* keep solid dark blue shell to match background */
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+    }
+
+    /* --- top bar --- */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 18px 18px 10px;
+    }
+    .brand{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.78);
+      user-select:none;
+    }
+    .dot{
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--mint);
+      box-shadow: 0 0 14px rgba(123,255,199,.95);
+    }
+    .pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.72);
+      white-space:nowrap;
+      user-select:none;
+    }
+
+    /* Dev preview UI */
+    .dev-preview{
+      position: relative; /* stay in document flow so it doesn't overlap content */
+      margin-top: 8px;
+      display:flex;
+      gap:8px;
+      z-index: 3;
+      align-items:center;
+      justify-content:flex-end;
+      padding-right: 18px;
+      pointer-events: auto;
+    }
+    .dev-preview .dev-btn{
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.06);
+      color: rgba(230,245,255,0.95);
+      font-size:12px;
+      cursor:pointer;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .dev-preview .dev-btn:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+      background: rgba(255,255,255,0.04);
+    }
+
+    @media (max-width: 900px){
+      .dev-preview{ position: static; margin-top: 10px; justify-content:flex-end; }
+      .dev-preview .dev-btn{ padding:6px 8px; font-size:11px; }
+    }
+
+    /* --- pages --- */
+    .page{
+      padding: 0 18px 18px;
+    }
+    .hidden{ display:none; }
+
+    /* --- quiz card (Purpose-like capsule + panel) --- */
+    .quiz-shell{ padding: 18px; position:relative; z-index:2; margin-top:6px; }
+
+    .layout{ display:grid; grid-template-columns:minmax(0,0.7fr) minmax(0,1.3fr); gap:48px; align-items:center; }
+
+    /* CAPSULE + LASER */
+    .capsule-wrap{ position:relative; display:flex; justify-content:center; align-items:center; padding:34px 0; }
+    .capsule{ width:210px; height:260px; border-radius:46%; background: radial-gradient(circle at 50% 0%,rgba(255,255,255,0.96),transparent 52%) top/100% 50% no-repeat, radial-gradient(circle at 50% 100%,#1b2f63,#071021); box-shadow:0 0 40px rgba(130,220,255,0.9); position:relative; overflow:hidden; animation:capsuleFloat 6s ease-in-out infinite alternate; }
+    .capsule-inner{ position:absolute; inset:18px; border-radius:40%; border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 32px rgba(0,0,0,0.7); overflow:hidden; }
+    .capsule-line{ position:absolute; left:10%; right:10%; top:50%; height:1px; background:linear-gradient(90deg,transparent,#7ecbff,transparent); opacity:.7; }
+    .scan-line{ position:absolute; top:8%; bottom:8%; width:3px; left:50%; transform:translateX(-50%); background:linear-gradient( to bottom, transparent 0%, rgba(163,255,255,0.0) 10%, rgba(163,255,255,0.75) 30%, rgba(255,255,255,1) 50%, rgba(163,255,255,0.75) 70%, rgba(163,255,255,0.0) 90%, transparent 100% ); box-shadow:0 0 18px rgba(163,255,255,0.9); opacity:.85; animation:scanBeam 3.4s ease-in-out infinite; }
+    .capsule-orbit{ position:absolute; width:210px; height:50px; border-radius:50%; bottom:-6px; background:radial-gradient(circle at 50% 0,rgba(170,255,255,0.9),transparent 65%); filter:blur(8px); animation:orbitPulse 6s ease-in-out infinite alternate; }
+
+    .capsule-label{ text-align:center; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(207,222,255,0.9); margin-top:10px; }
+    .status-row{ display:flex; justify-content:center; gap:10px; margin-top:10px; font-size:10px; }
+    .pill{ border-radius:999px; padding:4px 9px; border:1px solid rgba(126,202,255,0.6); background:rgba(10,30,55,0.85); display:flex; align-items:center; gap:6px; }
+    .pill-dot{ width:7px; height:7px; border-radius:50%; background:#4dfef6; box-shadow:0 0 10px rgba(96,255,245,0.8); }
+
+    @keyframes capsuleFloat{ 0%{transform:translateY(18px) scale(0.96);} 50%{transform:translateY(-22px) scale(1.05);} 100%{transform:translateY(12px) scale(0.98);} }
+    @keyframes orbitPulse{ 0%{opacity:.7;transform:scale(0.96);} 50%{opacity:1;transform:scale(1.05);} 100%{opacity:.75;transform:scale(0.98);} }
+    @keyframes scanBeam{ 0%{transform:translate(-50%,-60%);} 50%{transform:translate(-50%,55%);} 100%{transform:translate(-50%,-60%);} }
+
+    .panel{ border-radius:12px; border:1px solid rgba(164,192,255,0.5); background: linear-gradient(180deg,#041025,#020611); box-shadow:0 0 26px rgba(0,0,0,0.78); padding:22px 26px 20px; min-height:460px; }
+    .q-header{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:rgba(199,216,252,0.85); margin-bottom:10px; }
+    .q-title{ font-size:16px; margin-bottom:12px; }
+
+    /* question spacing and panel body breathing room */
+    .question-text{ font-size:18px; line-height:1.45; color:#ffffff; margin-bottom:24px; font-weight:600; }
+    .panel-body{ padding-top:14px; }
+
+    .answers{ display:flex; flex-direction:column; gap:14px; margin-bottom:18px; }
+    .answer{ border-radius:999px; border:1px solid rgba(136,162,227,0.55); padding:12px 14px; font-size:14px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:background .12s ease,border-color .12s ease; background:transparent; color:#ffffff; }
+    .answer .label{ display:block; width:28px; height:28px; font-weight:700; color:#ffffff; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background: rgba(10,20,30,0.26); }
+    .answer span{ color:#ffffff; }
+    .answer:hover{ border-color:rgba(184,210,255,0.95); background:rgba(120,163,255,0.06); }
+    .answer.selected{ background: radial-gradient(circle at 0 0, rgba(86,255,246,0.06), transparent 40%); border-color: rgba(86,255,246,0.9); }
+
+    .nav{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+    .btn-small{ border-radius:999px; border:1px solid rgba(160,185,245,0.65); background:transparent; color:rgba(221,233,255,0.9); padding:7px 14px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; }
+    .btn-small.primary{ border:none; background:radial-gradient(circle at 0 0,#56fff6,#13d3ff); color:#021019; box-shadow:0 0 20px rgba(106,255,243,0.85); }
+    .hint{ font-size:11px; color:rgba(184,201,238,0.8); margin-top:10px; }
+
+    /* RESULT-TYPE DECORATIONS (richer backgrounds and patterns) */
+    .result-shell.result-earth::before{
+      content:""; position:absolute; inset:-20%;
+      background:
+        radial-gradient(circle at 20% 25%, rgba(120,230,150,0.16), transparent 20%),
+        radial-gradient(circle at 70% 70%, rgba(80,190,130,0.08), transparent 28%),
+        repeating-radial-gradient(circle at 40% 40%, rgba(140,255,190,0.03) 0 2px, transparent 2px 8px);
+      filter: blur(36px);
+      pointer-events:none; z-index:0; opacity:1;
+    }
+    .result-shell.result-earth::after{
+      content:""; position:absolute; inset:0; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='120'><g fill='%231a6b3a' opacity='0.12'><ellipse cx='40' cy='80' rx='32' ry='14'/><ellipse cx='140' cy='60' rx='28' ry='10'/><ellipse cx='200' cy='80' rx='20' ry='8'/></g></svg>"); background-repeat: repeat; opacity:0.55; mix-blend-mode:overlay; filter: blur(6px) saturate(1.2); pointer-events:none; z-index:0;
+    }
+
+    .result-shell.result-ocean::before{
+      content:""; position:absolute; inset:-22%;
+      background:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='120' viewBox='0 0 800 120'><g fill='none' stroke='%230b7fae' stroke-opacity='0.14' stroke-width='12' stroke-linecap='round'><path d='M0 70 C80 40 160 100 240 70 C320 40 400 100 480 70 C560 40 640 100 720 70 C800 40 880 100 960 70'/></g></svg>") repeat-x,
+        repeating-linear-gradient(180deg, rgba(16,160,180,0.08) 0 8px, rgba(28,190,210,0.06) 8px 16px),
+        radial-gradient(circle at 50% 40%, rgba(40,180,220,0.12), transparent 30%),
+        radial-gradient(circle at 72% 30%, rgba(255,190,90,0.10), transparent 40%);
+      background-size: auto 56px, auto, cover, cover;
+      filter: blur(28px) saturate(1.06);
+      pointer-events:none; z-index:0; animation: oceanWave 9s linear infinite;
+    }
+
+    /* Ocean hologram (blue) */
+    .result-shell.result-ocean .ocean-grid{ display:grid; grid-template-columns: 1fr 300px; gap:18px; align-items:start; }
+    .result-shell.result-ocean .ocean-holo{ display:flex; align-items:center; justify-content:center; }
+    .result-shell.result-ocean .holo-wrap{ position:relative; display:flex; justify-content:center; align-items:center; padding:8px 0; }
+    .result-shell.result-ocean .holo{ width:240px; height:300px; border-radius:50% / 56%; position:relative; overflow:hidden; background:
+      radial-gradient(circle at 50% 84%, rgba(14,116,144,0.95), transparent 58%),
+      radial-gradient(circle at 32% 20%, rgba(8,76,97,0.85), transparent 60%),
+      radial-gradient(circle at 72% 22%, rgba(6,95,134,0.78), transparent 60%),
+      radial-gradient(circle at 52% 56%, rgba(20,184,230,0.40), transparent 62%),
+      radial-gradient(circle at 50% 50%, rgba(190,220,240,0.28), rgba(4,10,24,0.70) 78%);
+    box-shadow:
+      0 0 110px rgba(14,116,144,0.70),
+      0 0 170px rgba(8,76,97,0.55),
+      0 0 190px rgba(6,95,134,0.50);
+    animation: soulFloat 10s ease-in-out infinite; filter: saturate(1.10) brightness(1.02);
+    }
+    .result-shell.result-ocean .holo::before{ content:""; position:absolute; inset:0; background:
+      radial-gradient(circle at 35% 35%, rgba(160,210,255,0.14), transparent 60%),
+      radial-gradient(circle at 70% 40%, rgba(190,235,255,0.12), transparent 62%),
+      radial-gradient(circle at 50% 78%, rgba(170,240,255,0.16), transparent 60%);
+      opacity:0.85; mix-blend-mode: normal; animation: driftSoft 14s cubic-bezier(.45,0,.2,1) infinite alternate;
+    }
+    .result-shell.result-ocean .holo::after{ content:""; position:absolute; inset:11%; border-radius:50% / 60%; border:1px solid rgba(220,240,255,0.12); opacity:0.6; }
+    .result-shell.result-ocean .holo-spark{ position:absolute; width:7px; height:7px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,1), rgba(255,255,255,0) 70%); box-shadow:0 0 16px rgba(180,220,255,0.9); opacity:0.9; mix-blend-mode:screen; animation: floatInner 9s ease-in-out infinite; }
+    .result-shell.result-ocean .holo-spark.s1{ left:30%; top:32%; animation-delay:-2s; }
+    .result-shell.result-ocean .holo-spark.s2{ left:62%; top:44%; animation-delay:1.4s; }
+    .result-shell.result-ocean .holo-spark.s3{ left:46%; top:24%; animation-delay:3.6s; }
+    .result-shell.result-ocean .orbit{ position:absolute; width:200px; height:54px; border-radius:50%; bottom:-10px; left:50%; transform:translateX(-50%); background:radial-gradient(circle at 50% 0, rgba(34,211,238,0.95), rgba(14,165,183,0.40) 45%, transparent 80%); filter:blur(12px); opacity:0.95; mix-blend-mode:screen; pointer-events:none; }
+
+    /* Shared holo base (sparks, motion) */
+    .result-shell .holo{ width:240px; height:300px; border-radius:50% / 56%; position:relative; overflow:hidden; animation: soulFloat 10s ease-in-out infinite; filter: saturate(1.02) brightness(1.02); }
+    .result-shell .holo::before{ content:""; position:absolute; inset:0; background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.08), transparent 48%), radial-gradient(circle at 70% 40%, rgba(255,255,255,0.04), transparent 50%); opacity:0.9; mix-blend-mode: normal; animation: driftSoft 14s cubic-bezier(.45,0,.2,1) infinite alternate; }
+    .result-shell .holo::after{ content:""; position:absolute; inset:11%; border-radius:50% / 60%; border:1px solid rgba(255,255,255,0.12); opacity:0.6; }
+    .result-shell .holo-spark{ position:absolute; width:7px; height:7px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,1), rgba(255,255,255,0) 70%); box-shadow:0 0 16px rgba(255,255,255,0.75); opacity:0.9; mix-blend-mode:screen; animation: floatInner 9s ease-in-out infinite; }
+    .result-shell .holo-spark.s1{ left:30%; top:32%; animation-delay:-2s; }
+    .result-shell .holo-spark.s2{ left:62%; top:44%; animation-delay:1.4s; }
+    .result-shell .holo-spark.s3{ left:46%; top:24%; animation-delay:3.6s; }
+
+    /* Earth hologram (green) */
+    .result-shell.result-earth .holo{ background: radial-gradient(circle at 50% 84%, rgba(150,220,160,0.95), transparent 58%), radial-gradient(circle at 32% 20%, rgba(200,240,200,0.72), transparent 60%); box-shadow: 0 0 110px rgba(110,200,120,0.55), 0 0 170px rgba(160,230,160,0.30); filter:saturate(1.06); }
+
+    /* Animal hologram (brown) */
+    .result-shell.result-animal .holo{ background: radial-gradient(circle at 50% 84%, rgba(210,180,140,0.95), transparent 58%), radial-gradient(circle at 32% 20%, rgba(190,160,120,0.64), transparent 60%); box-shadow: 0 0 110px rgba(200,150,90,0.40), 0 0 170px rgba(180,130,80,0.30); }
+
+    /* Tech hologram (purple) */
+    .result-shell.result-tech .holo{ background: radial-gradient(circle at 50% 84%, rgba(200,150,255,0.95), transparent 58%), radial-gradient(circle at 32% 20%, rgba(170,120,240,0.72), transparent 60%); box-shadow: 0 0 110px rgba(160,100,240,0.50), 0 0 170px rgba(210,160,255,0.30); }
+
+    /* Dimensional hologram (rainbow) */
+    .result-shell.result-dimensional .holo{ background: linear-gradient(90deg,#ffd1f8,#c3b0ff 35%, #a0e0ff 70%); box-shadow: 0 0 140px rgba(200,160,255,0.22), 0 0 200px rgba(160,200,255,0.12); }
+
+    /* per-type grid for holo placement */
+    .result-shell.result-earth .earth-grid,
+    .result-shell.result-tech .tech-grid,
+    .result-shell.result-dimensional .dimensional-grid,
+    .result-shell.result-animal .animal-grid{ display:grid; grid-template-columns: 1fr 300px; gap:18px; align-items:start; }
+
+    /* per-type primary button colors */
+    .result-shell.result-earth .result-controls .btn-main{ border:none; background: linear-gradient(90deg,#3ad07a,#1f7a3e); color:#fff; box-shadow: 0 10px 34px rgba(30,140,80,0.16); }
+    .result-shell.result-tech .result-controls .btn-main{ border:none; background: linear-gradient(90deg,#a070ff,#6e48d9); color:#fff; box-shadow: 0 10px 34px rgba(120,80,220,0.16); }
+    .result-shell.result-dimensional .result-controls .btn-main{ border:none; background: linear-gradient(90deg,#ffd1f8,#c3b0ff); color:#fff; box-shadow: 0 10px 34px rgba(180,120,240,0.10); }
+
+    /* per-type badge tweaks */
+    .result-shell.result-earth .badge{ box-shadow: 0 10px 36px rgba(30,150,80,0.14); background: linear-gradient(180deg,#aef6c8,#58c07f); color:#fff; border: 1px solid rgba(255,255,255,0.06); padding:10px 18px; font-weight:800; border-radius:12px; }
+    .result-shell.result-tech .badge{ box-shadow: 0 10px 36px rgba(160,100,240,0.14); background: linear-gradient(180deg,#d5b7ff,#a277f0); color:#fff; border:1px solid rgba(255,255,255,0.06); padding:10px 18px; font-weight:800; border-radius:12px; }
+    .result-shell.result-dimensional .badge{ box-shadow: 0 10px 36px rgba(180,120,240,0.16); background: linear-gradient(90deg,#ffd1f8,#c3b0ff 40%, #a0e0ff 80%); color:#fff; border:1px solid rgba(255,255,255,0.06); padding:10px 18px; font-weight:800; border-radius:12px; }
+
+    /* Ocean sections: rectangular cards (now darker blue theme) */
+    .result-shell.result-ocean .ocean-sections{ position:relative; z-index:1; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:12px; align-items:start; }
+
+    /* subtle light wash behind the cards */
+    .result-shell.result-ocean .ocean-sections::before{
+      content:""; position:absolute; inset:-8% -6% -6% -6%; z-index:0; pointer-events:none;
+      background: radial-gradient(circle at 24% 24%, rgba(255,255,255,0.06), transparent 12%), radial-gradient(circle at 76% 68%, rgba(200,240,255,0.04), transparent 20%);
+      filter: blur(18px) saturate(1.02);
+    }
+
+    .result-shell.result-ocean .ocean-section{ position:relative; z-index:2; padding:18px; border-radius:12px; box-shadow: 0 12px 36px rgba(6,20,40,0.20); display:flex; flex-direction:column; gap:12px; min-height:150px; overflow:hidden; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; color:#ffffff; border:1px solid rgba(255,255,255,0.04); background: linear-gradient(180deg, rgba(6,58,78,0.96), rgba(10,84,104,0.96)); }
+
+    /* CORE - deep midnight blue */
+    .result-shell.result-ocean .ocean-section.section-core{
+      background: linear-gradient(180deg,#064b5e,#0a6e78);
+      border: 1px solid rgba(110,170,230,0.06);
+      color:#ffffff;
+      border-radius: 18px 8px 18px 8px;
+      clip-path: polygon(0 0, 100% 0, 100% 86%, 86% 100%, 0 100%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='120' viewBox='0 0 320 120'><g fill='none' stroke='%23ffffff' stroke-opacity='0.03' stroke-width='8' stroke-linecap='round'><path d='M0 80 C60 58 120 92 180 74 C240 56 300 92 320 84'/></g></svg>"); background-position:right bottom; background-size:60%; background-repeat:no-repeat;
+    }
+
+    /* ORIGIN - watery teal deep */
+    .result-shell.result-ocean .ocean-section.section-origin{
+      background: linear-gradient(180deg,#095466,#0f7380);
+      border: 1px solid rgba(100,160,200,0.06);
+      color:#ffffff;
+      border-radius: 12px 26px 12px 26px;
+      clip-path: ellipse(98% 90% at 5% 10%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='120' viewBox='0 0 220 120'><g fill='none' stroke='%23ffffff' stroke-opacity='0.03' stroke-width='8'><path d='M10 90 C40 60 80 60 120 70 C160 80 200 60 210 48'/></g></svg>"); background-position:left top; background-size:40%; background-repeat:no-repeat;
+    }
+
+    /* PURPOSE - soft indigo */
+    .result-shell.result-ocean .ocean-section.section-purpose{
+      background: linear-gradient(180deg,#0a4a62,#0b3f58);
+      border: 1px solid rgba(80,120,160,0.06);
+      color:#ffffff;
+      border-radius: 18px;
+      clip-path: polygon(0 6%, 100% 0, 100% 86%, 0 100%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='120' viewBox='0 0 220 120'><g fill='none' stroke='%23ffffff' stroke-opacity='0.03' stroke-width='6'><circle cx='30' cy='24' r='20'/></g></svg>"); background-position:left top; background-size:28%; background-repeat:no-repeat;
+    }
+
+    /* ENERGY - deep tide with subtle wave */
+    .result-shell.result-ocean .ocean-section.section-energy{
+      background: linear-gradient(180deg,#074f6a,#066277);
+      border: 1px solid rgba(80,120,150,0.06);
+      color:#ffffff;
+      border-radius: 14px 30px 14px 30px;
+      clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='120' viewBox='0 0 300 120'><g fill='none' stroke='%23ffffff' stroke-opacity='0.03' stroke-width='8'><path d='M20 80 C80 64 140 96 200 84 C260 72 300 92 300 92'/></g></svg>"); background-position:right bottom; background-size:52%; background-repeat:no-repeat;
+    }
+
+    /* REFLECTION - calm navy */
+    .result-shell.result-ocean .ocean-section.section-reflection{
+      background: linear-gradient(180deg,#0a3c4a,#08323f);
+      border: 1px solid rgba(120,170,200,0.06);
+      color:#ffffff;
+      border-radius: 16px 8px 16px 8px;
+      clip-path: ellipse(100% 94% at 50% 6%);
+    }
+
+    .result-shell.result-ocean .ocean-section:hover{ transform: translateY(-6px); box-shadow: 0 20px 48px rgba(6,16,30,0.28); }
+    .result-shell.result-ocean .ocean-section h4{ margin:0 0 8px; font-size:15px; letter-spacing:.06em; text-transform:uppercase; font-weight:700; display:flex; align-items:center; gap:10px; color:#ffffff; }
+    .result-shell.result-ocean .ocean-section p, .result-shell.result-ocean .ocean-section li{ font-size:14px; line-height:1.5; color:rgba(255,255,255,0.96); margin:0 0 8px; }
+    .result-shell.result-ocean .ocean-section ul{ margin:6px 0 0 18px; padding:0; }
+
+    /* position result controls above the light wash */
+    .result-shell.result-ocean .result-controls{ position:relative; z-index:2; }
+    .result-shell.result-ocean .result-controls::before{ content:""; position:absolute; inset:-6px; z-index:0; pointer-events:none; background: radial-gradient(circle at 20% 40%, rgba(255,255,255,0.04), transparent 20%); filter: blur(6px); }
+
+    /* ocean-specific primary button (Back to answers) - blue with white text */
+    .result-shell.result-ocean .result-controls .btn-main{
+      border:none;
+      background: linear-gradient(90deg,#22d3ee,#0ea5b7);
+      color:#fff;
+      box-shadow: 0 10px 34px rgba(30,110,200,0.18), 0 0 28px rgba(80,160,255,0.06) inset;
+      padding:10px 18px;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    .result-shell.result-ocean .result-controls .btn-main:hover{ transform: translateY(-3px); filter:brightness(1.03); box-shadow: 0 14px 46px rgba(30,110,200,0.22), 0 0 40px rgba(80,160,255,0.08) inset; }
+
+    @media (max-width:640px){ .result-shell.result-ocean .ocean-grid{ grid-template-columns:1fr; } .result-shell.result-ocean .ocean-sections{ grid-template-columns: 1fr; gap:10px; } }
+
+    /* subtle holo animations - local copies so holograms animate on this page */
+    @keyframes soulFloat{ 0%{ transform: translateY(0) scale(1); opacity:0.96;} 50%{ transform: translateY(-8px) scale(1.03); opacity:1;} 100%{ transform: translateY(0) scale(1); opacity:0.96;} }
+    @keyframes driftSoft{ 0%{ transform: translateY(0);} 50%{ transform: translateY(-6px);} 100%{ transform: translateY(0);} }
+    @keyframes floatInner{ 0%{ transform: translateY(0);} 50%{ transform: translateY(-6px);} 100%{ transform: translateY(0);} }
+
+    @keyframes holoHue{ 0%{ filter: hue-rotate(0deg); } 50%{ filter: hue-rotate(180deg); } 100%{ filter: hue-rotate(360deg); } }
+
+    .result-shell.result-dimensional .holo{ animation: soulFloat 10s ease-in-out infinite, holoHue 12s linear infinite; }
+
+    @keyframes oceanWave{ 0%{ transform: translateY(0); } 50%{ transform: translateY(6px);} 100%{ transform: translateY(0); } }
+
+    .result-shell.result-dimensional::before{
+      content:""; position:absolute; inset:-30%;
+      background:
+        conic-gradient(from 180deg at 50% 40%, rgba(210,170,255,0.06), rgba(160,120,240,0.04)),
+        radial-gradient(circle at 30% 20%, rgba(255,255,255,0.04), transparent 30%);
+      filter: blur(36px);
+      pointer-events:none; z-index:0; animation: spin 12s linear infinite;
+    }
+    .result-shell.result-dimensional::after{
+      content:""; position:absolute; inset:0; background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.06) 0 1px, transparent 1px 4px); opacity:0.5; mix-blend-mode:overlay; pointer-events:none; z-index:0;
+    }
+
+    .result-shell.result-animal::before{
+      content:""; position:absolute; inset:8% 5% auto 5%;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 300'><g fill='%23000000' opacity='0.06'><path d='M50 200 L100 150 L150 140 L200 150 L260 120 L300 140 L360 160 L420 150 L480 170 L540 220 L500 240 L420 220 L360 230 L300 240 L240 220 L180 230 L120 220 Z'/><path d='M80 240 L120 200 L170 190 L220 200 L280 180 L320 200 L380 220 L430 210 L480 230 L520 260 L480 280 L420 260 L360 270 L300 280 L240 260 L180 270 L120 260 Z' /></g></svg>");
+      background-repeat:no-repeat; background-position: left bottom; background-size:80%; filter: blur(8px) grayscale(.6) saturate(.2); pointer-events:none; z-index:0; opacity:0.95;
+    }
+
+    .result-shell.result-tech::before{
+      content:""; position:absolute; inset:-20%;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'><defs><pattern id='h' width='60' height='52' patternUnits='userSpaceOnUse'><polygon points='30,0 60,15 60,45 30,60 0,45 0,15' fill='%238a68b8' opacity='0.04'/></pattern></defs><rect width='100%' height='100%' fill='url(%23h)'/></svg>"); background-repeat: repeat; background-size:120px 104px; filter: blur(12px) contrast(.95); opacity:0.8; pointer-events:none; z-index:0;
+    }
+
+    @keyframes spin{ 0%{ transform: rotate(0deg); } 100%{ transform: rotate(360deg); } }
+
+    @media (max-width: 640px){ .layout{ grid-template-columns:1fr; } .capsule{ width:140px; height:180px; } .capsule-wrap{ padding:20px 0; } }
+
+
+    /* --- result "separate page" --- */
+    .result-page{
+      padding: 18px;
+    }
+
+    .result-shell{
+      border-radius: 24px;
+      padding: 22px 22px 20px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background:
+        linear-gradient(180deg, rgba(15,30,22,0.86), rgba(10,18,14,0.86)),
+        radial-gradient(circle at 12% 10%, rgba(220,255,210,0.05), transparent 28%),
+        rgba(8,12,10,0.9);
+      box-shadow: 0 30px 100px rgba(0,0,0,.56), inset 0 1px 0 rgba(255,255,255,0.02);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* animated floating lights (soft fireflies) - brighter and warmer */
+    .result-shell::before{
+      content:""; position:absolute; inset:-8% -4% -8% -4%; z-index:0; pointer-events:none; mix-blend-mode:screen;
+      background-image: radial-gradient(circle at 8% 24%, rgba(210,250,200,0.12), transparent 6%),
+                        radial-gradient(circle at 28% 8%, rgba(255,250,200,0.10), transparent 9%),
+                        radial-gradient(circle at 70% 66%, rgba(215,235,190,0.08), transparent 8%),
+                        radial-gradient(circle at 82% 40%, rgba(200,230,170,0.06), transparent 6%);
+      filter: blur(18px);
+      animation: floatLights 8s linear infinite;
+      opacity:.98;
+    }
+
+    @keyframes floatLights{ 0%{ transform: translateY(0) translateX(0);} 50%{ transform: translateY(-6px) translateX(6px);} 100%{ transform: translateY(0) translateX(0);} }
+
+    /* subtle glow / color wash behind the page (warmer, lighter) */
+    .result-shell::after{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(190,240,190,0.12), transparent 26%),
+        radial-gradient(circle at 70% 70%, rgba(170,210,170,0.08), transparent 26%),
+        radial-gradient(circle at 50% 20%, rgba(235,210,160,0.03), transparent 45%);
+      filter: blur(46px);
+      opacity: .94;
+      pointer-events:none;
+      z-index:0;
+      transform: translateZ(0);
+    }
+
+    .result-shell > *{ position: relative; z-index: 2; }
+
+    /* Your result HTML already uses .badge + per-type wrappers.
+       We style them without changing your result strings. */
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.82);
+      margin-bottom: 12px;
+    }
+
+    .result-shell h2{
+      font-size: 20px;
+      line-height: 1.25;
+      margin-bottom: 8px;
+      letter-spacing: .02em;
+    }
+    .result-shell h3{
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,.78);
+      margin-bottom: 12px;
+      letter-spacing: .01em;
+    }
+    .result-shell p{
+      font-size: 13.5px;
+      line-height: 1.62;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .result-shell strong{ color: rgba(255,255,255,.92); }
+
+    /* per-type badge accents */
+    .result-shell.result-earth .badge{
+      box-shadow: 0 0 28px rgba(87,215,125,0.28);
+      background: linear-gradient(90deg, rgba(120,230,150,0.08), rgba(60,160,110,0.04));
+      color: rgba(4,28,12,0.92);
+      border-color: rgba(120,230,150,0.08);
+    }
+    .result-shell.result-ocean .badge{
+      box-shadow: 0 0 28px rgba(34,211,238,0.28);
+      background: linear-gradient(90deg, rgba(120,240,255,0.10), rgba(14,165,183,0.06));
+      color: #ffffff; /* white text */
+      text-shadow: 0 1px 0 rgba(0,0,0,0.14);
+      border-color: rgba(80,200,255,0.06);
+      padding:10px 14px; border-radius:12px; font-weight:700; letter-spacing:.10em;
+    }
+
+    .result-shell.result-ocean .badge-ocean{
+      background: linear-gradient(180deg,#bdf7ff,#36c9d7);
+      color: #ffffff;
+      box-shadow: 0 10px 34px rgba(40,140,220,0.12);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding:10px 18px; font-weight:800; border-radius:14px; display:inline-flex; align-items:center; gap:8px;
+    }
+    .result-shell.result-dimensional .badge{
+      box-shadow: 0 0 26px rgba(180,140,255,0.20);
+      background: linear-gradient(90deg, rgba(200,160,255,0.06), rgba(140,100,240,0.04));
+      color: rgba(28,8,46,0.92);
+      border-color: rgba(190,150,255,0.06);
+    }
+    /* animal badge: green, floral, white text */
+    .result-shell.result-animal .badge{
+      box-shadow: 0 8px 30px rgba(32,100,60,0.12);
+      background: linear-gradient(180deg, #2f8f58, #1f6e44);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 8px 14px;
+      font-weight:600;
+      letter-spacing:.12em;
+    }
+    .result-shell.result-animal .badge-animal{
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><g fill='%23fff8e6' opacity='0.12'><circle cx='10' cy='10' r='3'/><circle cx='30' cy='12' r='2.6'/><circle cx='22' cy='26' r='2.6'/></g></svg>");
+      background-repeat: repeat;
+      background-size: 36px 36px;
+    }
+
+    /* earthier palette updated: badge white on light yellow, tighter grid and green glow background */
+    /* Primary badge: light green box with white text */
+    .result-shell.result-animal .badge{
+      box-shadow: 0 14px 40px rgba(28,100,52,0.12);
+      background: linear-gradient(180deg,#bff7d6,#7fe5a2); /* brighter light green */
+      color:#ffffff; /* white text */
+      border: 1px solid rgba(86,78,55,0.06);
+      padding:11px 20px;
+      font-weight:800;
+      font-size:15px;
+      letter-spacing:.12em;
+      display:inline-flex;
+      align-items:center;
+      gap:12px;
+      border-radius:12px; /* rectangular pill */
+      text-shadow: 0 1px 0 rgba(0,0,0,0.18);
+    }
+    .result-shell.result-animal .badge-animal{
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><g fill='%23ffffff' opacity='0.06'><circle cx='8' cy='10' r='3'/><circle cx='30' cy='12' r='2.6'/><circle cx='22' cy='26' r='2.6'/></g></svg>");
+      background-repeat: repeat; background-size: 36px 36px;
+    }
+
+    /* icons - shared */
+    .result-shell .icon{ display:inline-block; width:20px; height:20px; vertical-align:middle; margin-right:8px; flex:0 0 20px; }
+    .result-shell .icon svg{ width:20px; height:20px; display:block; }
+    .result-shell .icon svg path{ fill: rgba(255,255,255,0.95); opacity:0.95; }
+
+    /* per-type icon accents (override where needed) */
+    .result-shell.result-animal .icon.leaf svg path{ fill: rgba(33,110,66,0.98); }
+    .result-shell.result-animal .icon.paw svg path{ fill: rgba(220,160,60,0.95); }
+    .result-shell.result-animal .section-origin .icon.leaf svg path{ fill: rgba(33,110,66,0.98); }
+    .result-shell.result-animal .section-relationship .icon.heart svg path{ fill: rgba(140,110,50,0.98); }
+    .result-shell.result-animal .section-purpose .icon.paw svg path{ fill: rgba(210,150,40,0.98); }
+    .result-shell.result-animal .section-energetic .icon.seed svg path{ fill: rgba(160,120,70,0.98); }
+    .result-shell.result-animal .section-why .icon.foot svg path{ fill: rgba(45,120,70,0.98); }
+
+    .result-shell.result-animal h2{ font-size:23px; margin-top:10px; color:#fffef0; }
+    .result-shell.result-animal h3{ font-size:15px; color:rgba(255,255,240,0.95); margin-bottom:12px; }
+
+    /* additional per-type icon accents and interaction tweaks */
+    .result-shell.result-earth .icon.leaf svg path{ fill: rgba(39,100,60,0.98); }
+    .result-shell.result-earth .icon.seed svg path{ fill: rgba(170,120,60,0.95); }
+    .result-shell.result-ocean .icon.wave svg path{ fill: rgba(22,120,170,0.98); }
+    .result-shell.result-ocean .icon.shell svg path{ fill: rgba(80,170,200,0.96); }
+    .result-shell.result-tech .icon.chip svg path{ fill: rgba(150,100,240,0.98); }
+    .result-shell.result-dimensional .icon.star svg path{ fill: rgba(255,200,120,0.98); }
+
+    .result-shell .holo{ transition: transform 260ms cubic-bezier(.2,.9,.3,1), opacity 260ms, filter 260ms; transform-origin:center; }
+    .result-shell:hover .holo{ transform: scale(1.06); filter: brightness(1.04) saturate(1.04); }
+    .result-shell.card-hover .holo{ opacity: 0.86; transform: scale(0.98); filter: brightness(0.94) saturate(0.96); }
+    .result-shell .card:hover{ transform: translateY(-6px); box-shadow: 0 18px 42px rgba(6,16,30,0.20); }
+
+    /* make ocean and earth cards visually align with other types (lighter tints, stronger hover) */
+    .result-shell.result-ocean .ocean-section{ background: linear-gradient(180deg,#1b2840,#2f2546); color: #ffffff; border:1px solid rgba(255,255,255,0.03); box-shadow: 0 10px 28px rgba(6,20,40,0.12); }
+    .result-shell.result-ocean .ocean-section h4{ color: #ffffff !important; }
+    .result-shell.result-ocean .ocean-section p, .result-shell.result-ocean .ocean-section li{ color: rgba(255,255,255,0.96) !important; }
+
+    .result-shell.result-earth .earth-section{ background: linear-gradient(180deg,#1b2840,#2f2546); color:#ffffff; border:1px solid rgba(255,255,255,0.03); box-shadow: 0 10px 28px rgba(8,14,8,0.12); }
+    .result-shell.result-earth .earth-section h4{ color:#ffffff !important; }
+    .result-shell.result-earth .earth-section p, .result-shell.result-earth .earth-section li{ color: rgba(255,255,255,0.96) !important; }
+
+    /* grid fits content more tightly and aligns cards */
+    .result-shell.result-animal .animal-sections{
+      position:relative; z-index:1;
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; align-items:start;
+    }
+    .result-shell.result-animal .animal-sections::before{
+      content: ""; position:absolute; inset:-12% -5% auto -5%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(144,201,142,0.16), transparent 18%),
+        radial-gradient(circle at 80% 60%, rgba(110,170,120,0.08), transparent 30%);
+      filter: blur(28px); pointer-events:none; z-index:0; opacity:0.96;
+    }
+
+    /* per-section color variants & shapes */
+    .result-shell.result-animal .animal-section{ position:relative; z-index:2; padding: 16px; box-shadow: 0 10px 28px rgba(8,14,8,0.12); display:flex; flex-direction:column; gap:12px; min-height:160px; overflow:hidden; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+
+    /* ORIGIN - bright leaf green with organic curve */
+    .result-shell.result-animal .animal-section.section-origin{
+      background: linear-gradient(180deg,#edfff2, #c9f2d6);
+      border: 1px solid rgba(67,170,95,0.12);
+      color: #08341a;
+      border-radius: 20px 8px 20px 8px;
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='220' viewBox='0 0 420 220'><g fill='%230b3b22' opacity='0.08'><path d='M20 140 C60 100 110 80 170 78 C230 76 300 88 360 140 L360 200 L20 200 Z'/></g></svg>"); background-position:right bottom; background-size:48%; background-repeat:no-repeat;
+    }
+
+    /* RELATIONSHIP - warm pale yellow with soft leaf accent */
+    .result-shell.result-animal .animal-section.section-relationship{
+      background: linear-gradient(180deg,#fffbe6,#fff0b8);
+      border: 1px solid rgba(190,160,90,0.12);
+      color:#16301a;
+      border-radius: 10px 28px 10px 28px;
+      clip-path: polygon(0 6%, 100% 0, 100% 85%, 0 100%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='140' viewBox='0 0 220 140'><g fill='%23f3e7a6' opacity='0.26'><path d='M180 10 C160 34 130 40 100 44 C70 48 36 44 18 34 C36 54 80 70 140 66 C180 64 210 34 180 10 Z'/></g></svg>"); background-position:right top; background-size:46%; background-repeat:no-repeat;
+    }
+
+    /* PURPOSE - bright sun yellow, rounded pill */
+    .result-shell.result-animal .animal-section.section-purpose{
+      background: linear-gradient(180deg,#fff7d9,#ffe99a);
+      border: 1px solid rgba(220,180,100,0.12);
+      color:#2b3528;
+      border-radius: 28px 18px 28px 18px;
+      clip-path: ellipse(98% 90% at 5% 10%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='120' viewBox='0 0 220 120'><g fill='%23ffefb2' opacity='0.26'><circle cx='30' cy='24' r='20'/></g></svg>"); background-position:left top; background-size:32%; background-repeat:no-repeat;
+    }
+
+    /* ENERGETIC - earthy ochre with wave */
+    .result-shell.result-animal .animal-section.section-energetic{
+      background: linear-gradient(180deg,#fff8f0,#f3e4cf);
+      border: 1px solid rgba(160,120,86,0.12);
+      color:#2e2a20;
+      border-radius: 12px 34px 12px 34px;
+      clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='160' viewBox='0 0 300 160'><g fill='%23e9d7b8' opacity='0.16'><path d='M260 130 C230 112 180 96 120 100 C60 104 30 118 14 132 L14 160 L260 160 Z'/></g></svg>"); background-position:right bottom; background-size:52%; background-repeat:no-repeat;
+    }
+
+    /* SHADOW - olive with subtle tear */
+    .result-shell.result-animal .animal-section.section-shadow{
+      background: linear-gradient(180deg,#f7f6f2,#efe7d9);
+      border: 1px solid rgba(130,100,70,0.10);
+      color:#2c2b24;
+      border-radius: 14px 8px 24px 8px;
+      clip-path: polygon(0 0, 100% 0, 100% 88%, 88% 100%, 0 100%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='160' viewBox='0 0 260 160'><g fill='%23d4c6ad' opacity='0.10'><path d='M0 110 C40 90 100 84 160 92 C220 100 260 124 260 124 L260 160 L0 160 Z'/></g></svg>"); background-position:left bottom; background-size:60%; background-repeat:no-repeat;
+    }
+
+    /* WHY YOU FEEL DIFFERENT - fresh green */
+    .result-shell.result-animal .animal-section.section-why{
+      background: linear-gradient(180deg,#f3fff9,#dcf7ef);
+      border: 1px solid rgba(110,170,120,0.10);
+      color:#12321a;
+      border-radius: 18px 6px 18px 6px;
+      clip-path: ellipse(100% 94% at 50% 6%);
+    }
+
+    /* TRUTH CODE - warm gold with rounded badge */
+    .result-shell.result-animal .animal-section.section-truth{
+      background: linear-gradient(180deg,#fff7e2,#fff0c2);
+      border: 1px solid rgba(195,150,90,0.10);
+      color:#2b2416;
+      border-radius: 20px 10px 20px 10px;
+      clip-path: polygon(0 0, 100% 0, 100% 84%, 90% 100%, 0 100%);
+    }
+
+    /* ensure TRUTH and WHY sections match unified white text */
+    .result-shell.result-animal .animal-section.section-truth h4,
+    .result-shell.result-animal .animal-section.section-truth p,
+    .result-shell.result-animal .animal-section.section-truth li,
+    .result-shell.result-animal .animal-section.section-why h4,
+    .result-shell.result-animal .animal-section.section-why p,
+    .result-shell.result-animal .animal-section.section-why li{
+      color: #ffffff !important;
+    }
+
+    .result-shell.result-animal .animal-section:hover{ transform: translateY(-6px); box-shadow: 0 18px 42px rgba(6,16,8,0.28); }
+    .result-shell.result-animal .animal-section h4{ margin:0 0 8px; font-size:15px; letter-spacing:.06em; text-transform:uppercase; font-weight:700; display:flex; align-items:center; gap:10px; }
+    .result-shell.result-animal .animal-section h4 .icon svg path{ fill: rgba(255,255,255,0.95); }
+    .result-shell.result-animal .animal-section p, .result-shell.result-animal .animal-section li{ font-size:14px; line-height:1.5; color:rgba(18,32,20,0.95); margin:0 0 8px; }
+    .result-shell.result-animal .animal-section ul{ margin:6px 0 0 18px; padding:0; }
+
+    /* animal-specific primary button (Back to answers) - white text on deep green with glow */
+    .result-shell.result-animal .result-controls .btn-main{
+      border:none;
+      background: linear-gradient(90deg,#3ad07a,#1f7a3e);
+      color:#fff;
+      box-shadow: 0 10px 32px rgba(30,120,66,0.18), 0 0 28px rgba(55,200,120,0.06) inset;
+      padding:10px 18px;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    .result-shell.result-animal .result-controls .btn-main:hover{ transform: translateY(-3px); filter:brightness(1.03); box-shadow: 0 14px 46px rgba(30,120,66,0.22), 0 0 40px rgba(55,200,120,0.08) inset; }
+
+    /* tiny accent dots at bottom */
+
+    .result-shell .accent-dots{ position:absolute; left:12px; right:12px; bottom:8px; height:20px; z-index:1; pointer-events:none; background-image: radial-gradient(circle at 2% 50%, rgba(255,255,200,0.06) 0 3px, transparent 4px), radial-gradient(circle at 10% 60%, rgba(180,255,190,0.04) 0 3px, transparent 4px), radial-gradient(circle at 92% 40%, rgba(180,240,200,0.05) 0 2px, transparent 4px); opacity:.95; filter: blur(2px); }
+
+    @media (max-width:640px){
+      .result-shell.result-animal .animal-sections{ grid-template-columns: 1fr; gap:8px; }
+    }
+
+    /* animal result layout: sections-only (no image) */
+    .result-shell.result-animal .animal-grid{
+      display:block; /* content flows vertically */
+      margin-top: 6px;
+    }
+
+    .result-shell.result-animal .animal-content{
+      width:100%;
+    }
+
+    .result-shell.result-animal .animal-sections{
+      display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px;
+    }
+    .result-shell.result-animal .animal-section{
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(0,0,0,0.02));
+      border: 1px solid rgba(255,255,255,0.04);
+      padding: 12px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+    }
+    .result-shell.result-animal .animal-section h4{ margin:0 0 8px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.92); }
+    .result-shell.result-animal .animal-section h4 .icon svg path{ fill: rgba(255,255,255,0.95); }
+    .result-shell.result-animal .animal-section p, .result-shell.result-animal .animal-section li{ font-size:13px; line-height:1.5; color:var(--muted); margin:0 0 8px; }
+    .result-shell.result-animal .animal-section ul{ margin:6px 0 0 18px; padding:0; }
+
+    /* Unified to dimensional style/layout for all types */
+    .result-shell.result-earth .earth-grid,
+    .result-shell.result-ocean .ocean-grid,
+    .result-shell.result-tech .tech-grid,
+    .result-shell.result-dimensional .dimensional-grid,
+    .result-shell.result-animal .animal-grid{ display:grid; grid-template-columns: 1fr 300px; gap:18px; align-items:start; }
+
+    .result-shell .earth-sections,
+    .result-shell .ocean-sections,
+    .result-shell .animal-sections,
+    .result-shell .tech-sections,
+    .result-shell .dimensional-sections{ position:relative; z-index:1; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:12px; }
+
+    /* earth: horizontal-friendly layout that stays clear of the holo */
+    .result-shell.result-earth .earth-grid{ grid-template-columns: minmax(0,1fr) 320px; align-items:start; }
+    .result-shell.result-earth .earth-sections{ display:flex; flex-wrap:wrap; align-items:stretch; gap:14px; margin-top:12px; overflow:visible; }
+    .result-shell.result-earth .earth-section{ flex:1 1 260px; max-width: calc(50% - 14px); min-width:240px; }
+
+    /* all section cards use dimensional dark card style */
+    .result-shell .earth-section,
+    .result-shell .ocean-section,
+    .result-shell .animal-section,
+    .result-shell .tech-section,
+    .result-shell .dimensional-section{ padding:24px; border-radius:12px; box-shadow: 0 12px 36px rgba(50,30,80,0.18); min-height:150px; background: linear-gradient(180deg,#1b2840,#2f2546); color:#ffffff; border:1px solid rgba(255,255,255,0.03); }
+
+    .result-shell .earth-section h4, .result-shell .ocean-section h4, .result-shell .animal-section h4, .result-shell .tech-section h4, .result-shell .dimensional-section h4{ margin:0 0 12px; font-size:16px; letter-spacing:.08em; text-transform:uppercase; font-weight:800; color:#ffffff; }
+    .result-shell .earth-section p, .result-shell .ocean-section p, .result-shell .animal-section p, .result-shell .tech-section p, .result-shell .dimensional-section p, .result-shell .earth-section li, .result-shell .ocean-section li, .result-shell .animal-section li, .result-shell .tech-section li, .result-shell .dimensional-section li{ font-size:15px; line-height:1.7; color:#ffffff; margin:0 0 10px; letter-spacing:.01em; }
+
+    /* unify holo styling to dimensional holo (shared animated hue) */
+    .result-shell .holo{ background: linear-gradient(90deg,#ffd1f8,#c3b0ff 35%, #a0e0ff 70%); box-shadow: 0 0 140px rgba(200,160,255,0.22), 0 0 200px rgba(160,200,255,0.12); animation: soulFloat 10s ease-in-out infinite, holoHue 12s linear infinite; filter: saturate(1.04) brightness(1.02); }
+    .result-shell .holo{ 
+      background: 
+        radial-gradient(circle at 35% 25%, rgba(255,255,255,0.18), transparent 35%),
+        radial-gradient(circle at 65% 75%, rgba(200,150,255,0.12), transparent 40%),
+        linear-gradient(135deg,#ffd1f8 0%, #c3b0ff 35%, #a0e0ff 70%, #a0e0ff 100%);
+      box-shadow: 
+        0 0 140px rgba(200,160,255,0.22), 
+        0 0 200px rgba(160,200,255,0.12),
+        0 20px 60px rgba(100,50,200,0.30),
+        inset -8px -8px 20px rgba(0,0,0,0.15),
+        inset 12px 12px 24px rgba(255,255,255,0.20);
+      animation: soulFloat 10s ease-in-out infinite, holoHue 12s linear infinite; 
+      filter: saturate(1.08) brightness(1.04) drop-shadow(0 0 12px rgba(200,160,255,0.35));
+      perspective: 1200px;
+      transform-style: preserve-3d;
+    }
+    .result-shell .holo::before{ 
+      content:""; position:absolute; inset:0; 
+      background: 
+        radial-gradient(circle at 35% 35%, rgba(255,255,255,0.12), transparent 48%), 
+        radial-gradient(circle at 70% 40%, rgba(255,255,255,0.06), transparent 50%),
+        radial-gradient(circle at 25% 65%, rgba(100,200,255,0.04), transparent 55%);
+      opacity:0.95; 
+      mix-blend-mode: screen; 
+      animation: driftSoft 14s cubic-bezier(.45,0,.2,1) infinite alternate;
+      filter: blur(2px);
+    }
+    .result-shell .holo::after{ 
+      content:""; position:absolute; inset:11%; border-radius:50% / 60%; 
+      border:2px solid rgba(255,255,255,0.18); 
+      opacity:0.8;
+      box-shadow: 
+        inset 0 0 16px rgba(255,255,255,0.06),
+        0 0 8px rgba(255,255,255,0.10);
+    }
+
+    /* override per-section decorative variants so all cards follow the dimensional style */
+    .result-shell.result-animal .animal-section[class*='section-'],
+    .result-shell.result-ocean .ocean-section[class*='section-'],
+    .result-shell.result-earth .earth-section[class*='section-'],
+    .result-shell.result-tech .tech-section[class*='section-']{
+      background: linear-gradient(180deg,#1b2840,#2f2546) !important; color:#ffffff !important; border-color: rgba(255,255,255,0.03) !important; box-shadow: 0 12px 36px rgba(50,30,80,0.18) !important;
+    }
+
+    /* primary code badges are always white */
+    .result-shell .badge{ color: #ffffff !important; text-shadow: 0 1px 0 rgba(0,0,0,0.18); }
+
+    /* force true rectangles: remove all clip-paths and enforce consistent border-radius */
+    .result-shell .earth-section[class*='section-'],
+    .result-shell .ocean-section[class*='section-'],
+    .result-shell .animal-section[class*='section-'],
+    .result-shell .tech-section[class*='section-'],
+    .result-shell .dimensional-section[class*='section-']{
+      clip-path: none !important;
+      border-radius: 12px !important;
+    }
+
+    @media (max-width:640px){
+
+      .result-shell.result-animal .animal-sections{ grid-template-columns: 1fr; }
+      .result-shell.result-earth .earth-grid{ grid-template-columns: 1fr; }
+      .result-shell.result-tech .tech-grid{ grid-template-columns: 1fr; }
+      .result-shell.result-dimensional .dimensional-grid{ grid-template-columns: 1fr; }
+    }
+
+    .result-shell.result-tech .badge{
+      box-shadow: 0 0 26px rgba(200,160,255,0.22);
+      background: linear-gradient(90deg, rgba(230,200,255,0.06), rgba(210,170,255,0.04));
+      color: rgba(22,6,36,0.92);
+      border-color: rgba(210,170,255,0.06);
+    }
+
+    /* result controls */
+    .result-controls{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(255,255,255,.14);
+    }
+
+    /* Make the result buttons match the site's visual style */
+    .result-controls .btn{
+      border-radius:999px;
+      border:1px solid rgba(167,195,255,0.12);
+      background:transparent;
+      color:rgba(229,238,255,0.95);
+      padding:10px 16px;
+      font-size:13px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+      width: auto;
+    }
+    .result-controls .btn:hover{ transform: translateY(-2px); }
+    .result-controls .btn:active{ transform: translateY(0); }
+
+    .result-controls .btn-main{
+      border:none;
+      background: linear-gradient(90deg, rgba(255,210,125,0.12), rgba(255,180,60,0.06));
+      color: rgba(40,18,6,0.95);
+      box-shadow: 0 6px 22px rgba(255,190,90,0.08);
+    }
+    .result-controls .btn-main:hover{
+      filter:brightness(1.04);
+      box-shadow: 0 8px 32px rgba(255,190,90,0.12);
+    }
+
+    /* ensure consistent small-screen behaviour */
+    @media (max-width:640px){
+      .result-controls .btn, .result-controls .btn-main{ width:100%; }
+    }
+
+    .note{
+      margin-top: 10px;
+      font-size: 11px;
+      color: rgba(255,255,255,.62);
+      line-height: 1.5;
+    }
+
+    /* small screens */
+    @media (max-width: 640px){
+      .shell{ border-radius: 24px; }
+      .quiz-shell, .result-shell{ padding: 16px 14px; }
+      .question-text{ font-size: 16px; }
+      .btn{ width:100%; justify-content:center; }
+      .pill{ display:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="aura"></div>
+  <div class="shape-layer">
+    <div class="shape s1"></div>
+    <div class="shape s2"></div>
+    <div class="shape s3"></div>
+    <div class="shape s4"></div>
+  </div>
+
+  <div class="butterfly-layer">
+    <div class="butterfly b1"></div>
+    <div class="butterfly b2"></div>
+    <div class="butterfly b3"></div>
+    <div class="butterfly b4"></div>
+    <div class="butterfly b5"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="shell">
+
+      <div class="topbar">
+        <div class="brand">
+          <span class="dot"></span>
+          <span>SOUL ORIGIN · v0.3</span>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="pill">gentle scan · no right answers</div>
+          <!-- Dev preview buttons (visible so you can quickly check each result) -->
+          <div class="dev-preview" id="dev-preview" aria-hidden="false" aria-label="dev preview">
+            <button class="dev-btn" data-type="earth" title="Preview Earth">Earth</button>
+            <button class="dev-btn" data-type="ocean" title="Preview Ocean">Ocean</button>
+            <button class="dev-btn" data-type="dimensional" title="Preview Dimensional">Dimensional</button>
+            <button class="dev-btn" data-type="animal" title="Preview Animal">Animal</button>
+            <button class="dev-btn" data-type="tech" title="Preview Tech">Tech</button>
+            <button id="dev-back" class="dev-btn" title="Back to quiz">Back</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUIZ PAGE -->
+      <section id="quiz-section" class="page">
+        <div class="quiz-shell">
+          <div class="layout">
+            <div>
+              <div class="capsule-wrap">
+                <div id="capsule" class="capsule">
+                  <div class="capsule-inner">
+                    <div class="scan-line"></div>
+                  </div>
+                  <div class="capsule-line"></div>
+                </div>
+                <div class="capsule-orbit"></div>
+              </div>
+              <div class="capsule-label">Subject: Soul Origin</div>
+              <div class="status-row">
+                <div class="pill">
+                  <span class="pill-dot"></span><span>Signal: scanning...</span>
+                </div>
+                <div class="pill">
+                  <span class="pill-dot"></span><span>Layer: origin</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="panel">
+                <div class="q-header">
+                  <span id="progress-label">Question 1 / 15</span>
+                  <button class="btn-small" onclick="window.location.href='index.html'">← Back to Interface</button>
+                </div>
+
+                <div id="question-container" class="panel-body"></div>
+
+                <div class="nav">
+                  <button id="back-btn" class="btn-small">← Back</button>
+                  <button id="next-btn" class="btn-small primary" disabled>Next →</button>
+                </div>
+
+                <div class="hint">Go with your first honest reaction. Don’t try to “get” a type.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESULT PAGE (separate "page" inside same file) -->
+      <section id="result-page" class="result-page hidden">
+        <div class="result-shell">
+          <div id="result"></div>
+
+          <div class="result-controls">
+            <button id="retake-btn" class="btn" type="button">↺ Retake scan</button>
+            <button id="back-to-quiz-btn" class="btn btn-main" type="button">← Back to answers</button>
+          </div>
+
+          <div class="note">
+            If your result feels “blended”, that’s normal. Many people carry more than one strong signal.
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ✅ YOU SAID: don't change any questions or results. Script below is exactly your content,
+       only wrapped with UI + logic + hidden type labels during quiz. -->
+  <script>
+    const TYPES = ["earth", "ocean", "dimensional", "animal", "tech"];
+
+    const questions = [
+      {
+        text: "What does love feel like to you, underneath everything?",
+        answers: [
+          { type: "earth", text: "Like warm safety. Like a place I can finally exhale." },
+          { type: "ocean", text: "Like being fully felt, like water wrapping around me softly." },
+          { type: "dimensional", text: "Like expansion – my awareness opening into something bigger." },
+          { type: "animal", text: "Like touch, breath, instinct – something I feel in my body." },
+          { type: "tech", text: "Like harmony – when everything finally makes sense and syncs." }
+        ]
+      },
+      {
+        text: "When you were growing up, where did your imagination live most of the time?",
+        answers: [
+          { type: "earth", text: "In people – family, emotions, daily life stories." },
+          { type: "ocean", text: "In oceans, dreams, soft worlds that felt ancient." },
+          { type: "dimensional", text: "In the stars, in places with no gravity or normal rules." },
+          { type: "animal", text: "In forests, animals, creatures – anything wild and alive." },
+          { type: "tech", text: "In patterns, machines, puzzles – things that made sense." }
+        ]
+      },
+      {
+        text: "What hurts or confuses you most about the world?",
+        answers: [
+          { type: "earth", text: "How easily people misunderstand or hurt each other." },
+          { type: "ocean", text: "How numb and disconnected people can be from themselves." },
+          { type: "dimensional", text: "How small people allow their minds and vision to be." },
+          { type: "animal", text: "How we ignore our bodies, animals, nature, instinct." },
+          { type: "tech", text: "How chaotic and badly designed our systems are." }
+        ]
+      },
+      {
+        text: "How does nature affect you?",
+        answers: [
+          { type: "earth", text: "It calms me. It feels familiar, like coming home." },
+          { type: "ocean", text: "It opens my emotions – especially water. I feel memory in it." },
+          { type: "dimensional", text: "It’s beautiful, but I sense I come from somewhere else." },
+          { type: "animal", text: "My whole body relaxes. I feel alive and real again." },
+          { type: "tech", text: "It makes me wonder how it’s all built… is there a code to life?" }
+        ]
+      },
+      {
+        text: "What’s your strongest kind of intuition?",
+        answers: [
+          { type: "earth", text: "I understand people quickly – their stories, moods, motives." },
+          { type: "ocean", text: "I feel what’s unsaid – the emotional truth under everything." },
+          { type: "dimensional", text: "I get flashes, downloads or sudden clarity from nowhere." },
+          { type: "animal", text: "My body just knows – a clear yes or no without thinking." },
+          { type: "tech", text: "I recognise patterns instantly – in behaviour, timing, energy." }
+        ]
+      },
+      {
+        text: "If you could have more of one thing in your life, what would it be?",
+        answers: [
+          { type: "earth", text: "Real connection – a love and community that feel like home." },
+          { type: "ocean", text: "Emotional depth, softness, and honesty." },
+          { type: "dimensional", text: "More consciousness – more awareness, more states." },
+          { type: "animal", text: "Freedom to be fully myself, instinct and all." },
+          { type: "tech", text: "Building something meaningful that actually improves life." }
+        ]
+      },
+      {
+        text: "Around others, who do you naturally become?",
+        answers: [
+          { type: "earth", text: "The grounded one – the steady, reliable presence." },
+          { type: "ocean", text: "The softener – the emotional heart of the room." },
+          { type: "dimensional", text: "The visionary – the one who shifts the perspective." },
+          { type: "animal", text: "The instinct – the one who senses truth immediately." },
+          { type: "tech", text: "The organiser – the one who sees structure in the chaos." }
+        ]
+      },
+      {
+        text: "How do you feel in very 'normal' environments (offices, banks, routine places)?",
+        answers: [
+          { type: "earth", text: "I can manage and blend in, even if it’s dull." },
+          { type: "ocean", text: "They drain me. Everything feels emotionally shut down." },
+          { type: "dimensional", text: "I feel like a quiet observer from somewhere else." },
+          { type: "animal", text: "My body gets tight; I want movement, fresh air, nature." },
+          { type: "tech", text: "I analyse how everything works. Even the boring stuff is data." }
+        ]
+      },
+      {
+        text: "What do you struggle with the most?",
+        answers: [
+          { type: "earth", text: "Carrying too much for people I care about." },
+          { type: "ocean", text: "Absorbing emotions and energy that aren’t mine." },
+          { type: "dimensional", text: "Feeling too different or misunderstood." },
+          { type: "animal", text: "Feeling trapped, controlled, or domesticated." },
+          { type: "tech", text: "Overthinking – living in my head instead of my body." }
+        ]
+      },
+      {
+        text: "Why are you drawn to dreams, altered states, or deep inner experiences?",
+        answers: [
+          { type: "earth", text: "To heal and understand my story and relationships." },
+          { type: "ocean", text: "To feel deeply connected to myself and others." },
+          { type: "dimensional", text: "To explore other realms, states, or intelligences." },
+          { type: "animal", text: "To feel my body more alive, wild and present." },
+          { type: "tech", text: "To see the architecture behind reality more clearly." }
+        ]
+      },
+      {
+        text: "Which picture feels closest to what you bring to this world?",
+        answers: [
+          { type: "earth", text: "A loving home or community that feels safe and united." },
+          { type: "ocean", text: "A space where people wake up emotionally and soften." },
+          { type: "dimensional", text: "A new idea or frequency that shifts how people think." },
+          { type: "animal", text: "A sanctuary for nature, animals, bodies, and truth." },
+          { type: "tech", text: "A system or creation that makes life more intelligent." }
+        ]
+      },
+      {
+        text: "Which sentence quietly feels true for you?",
+        answers: [
+          { type: "earth", text: "I came here to help people reconnect and heal." },
+          { type: "ocean", text: "I came here to illuminate people emotionally." },
+          { type: "dimensional", text: "I came here to shift consciousness itself." },
+          { type: "animal", text: "I came here to protect life and reawaken instinct." },
+          { type: "tech", text: "I came here to rewrite old programs and systems." }
+        ]
+      },
+      {
+        text: "How would you describe your energy?",
+        answers: [
+          { type: "earth", text: "Warm, familiar, steady." },
+          { type: "ocean", text: "Soft, emotional, deep." },
+          { type: "dimensional", text: "Clear, unusual, electric." },
+          { type: "animal", text: "Grounded, instinctual, honest." },
+          { type: "tech", text: "Focused, logical, structured." }
+        ]
+      },
+      {
+        text: "What pattern repeats in your relationships?",
+        answers: [
+          { type: "earth", text: "I end up being the one who holds everything." },
+          { type: "ocean", text: "I merge too much and start to lose myself." },
+          { type: "dimensional", text: "I feel unseen or misunderstood in my depth." },
+          { type: "animal", text: "I need a lot of space and freedom to breathe." },
+          { type: "tech", text: "I hide behind thinking, work, or projects." }
+        ]
+      },
+      {
+        text: "If this lifetime is a mission, what do you hope to leave behind?",
+        answers: [
+          { type: "earth", text: "More love, unity, and healed human patterns." },
+          { type: "ocean", text: "Emotional awakening in the people I touch." },
+          { type: "dimensional", text: "New consciousness – fresh ways of seeing reality." },
+          { type: "animal", text: "Protection of nature, animals, bodies, and truth." },
+          { type: "tech", text: "Better systems that help humanity evolve." }
+        ]
+      }
+    ];
+
+    const tieBreaker = {
+      text: "Two of your soul codes are very strong. When you imagine feeling fully like yourself, which option feels closest?",
+      answers: [
+        { type: "earth", text: "I see myself surrounded by people I love, creating a feeling of home and unity." },
+        { type: "ocean", text: "I see myself holding a soft, glowing space where people finally feel and heal." },
+        { type: "dimensional", text: "I see myself bringing through ideas or energy that change how people see reality." },
+        { type: "animal", text: "I see myself free, close to nature, living in truth and protecting what’s alive." },
+        { type: "tech", text: "I see myself designing or guiding systems that make life clearer and more conscious." }
+      ]
+    };
+
+    const resultsContent = {
+      earth: `
+        <div class="result-earth">
+          <div class="earth-grid">
+            <div class="earth-content">
+              <button class="badge badge-earth" aria-pressed="false">PRIMARY CODE · EARTH LINEAGE WEAVER</button>
+              <h2>YOUR ORIGIN (What you were before)</h2>
+              <h3>Human lineage, back again in the samsara loop.</h3>
+
+              <div class="earth-sections">
+                <div class="earth-section section-origin">
+                  <h4><span class="icon leaf" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 21s8-8 18-10c0 0-2 6-8 10-6 4-10 0-10 0z"/></svg></span>YOUR ORIGIN</h4>
+                  <p>You had previous life on Earth. Tests show your brain recognises patterns fast — déjà vu, quick learning, instant recall. You’re more awake than most humans here, but not always aware that many souls came from outside this planet with different rules. You likely have a good relationship with the god-force of this planet.</p>
+                  <p>Since you are from Earth, explore your past human life on this planet. We know you were human, from a civilization close to this one; we don’t know if it was 30 or 100 years ago, only that you’ve cycled in human samsara for a while.</p>
+                </div>
+
+                <div class="earth-section section-purpose">
+                  <h4><span class="icon leaf" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 21s8-8 18-10c0 0-2 6-8 10-6 4-10 0-10 0z"/></svg></span>ATTRIBUTES</h4>
+                  <p>You have:</p>
+                  <ul>
+                    <li>strong emotional memory</li>
+                    <li>quick uptake — you get things fast</li>
+                    <li>ability to read people</li>
+                    <li>comfort in everyday routines</li>
+                    <li>déjà vu about places, faces, or situations</li>
+                  </ul>
+                </div>
+
+                <div class="earth-section section-energy">
+                  <h4><span class="icon leaf" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 21s8-8 18-10c0 0-2 6-8 10-6 4-10 0-10 0z"/></svg></span>STRENGTHS & WEAKNESS</h4>
+                  <p><strong>Your strengths</strong></p>
+                  <ul>
+                    <li>Guiding new souls on this planet</li>
+                    <li>Fast learner</li>
+                    <li>Strong instincts</li>
+                    <li>Recognising danger fast</li>
+                    <li>Success comes easy</li>
+                  </ul>
+                  <p><strong>Your weakness</strong></p>
+                  <ul>
+                    <li>Seeing, believing, remembering is one — you also need to analyse</li>
+                    <li>Surface-level thinking</li>
+                    <li>Attachment to ego</li>
+                    <li>Seeing people as stupid instead of different</li>
+                  </ul>
+                </div>
+
+                <div class="earth-section section-reflection">
+                  <h4><span class="icon leaf" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 21s8-8 18-10c0 0-2 6-8 10-6 4-10 0-10 0z"/></svg></span>RELATIONSHIPS & LESSON</h4>
+                  <p>You are built for long-term love, family, partnership, chosen family. You don’t need one “cosmic soulmate” — you need real humans who show up.</p>
+                  <p>Your lesson is learning to keep going — go to the test and find your purpose.</p>
+                  <p style="font-size:12px; opacity:0.82; margin-top:8px;">References: Earth Lineage Weaver. Based on Carl Jung’s Collective Unconscious, attachment theory (Bowlby & Ainsworth), and epigenetic research (Rachel Yehuda) showing that emotional and family patterns are passed through generations.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="earth-holo">
+              <div class="holo-wrap">
+                <div class="holo">
+                  <div class="holo-spark s1"></div>
+                  <div class="holo-spark s2"></div>
+                  <div class="holo-spark s3"></div>
+                </div>
+                <div class="orbit"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `,
+      ocean: `
+        <div class="result-ocean">
+          <div class="ocean-grid">
+            <div class="ocean-content">
+              <button class="badge badge-ocean" aria-pressed="false">PRIMARY CODE · OCEANIC MEMORY CARRIER</button>
+              <h2>YOUR ORIGIN</h2>
+              <p>Your psyche holds deep emotional memory — not from one lifetime, but from humanity’s long inner history.</p>
+              <p>You don’t just feel things; you remember them.</p>
+
+              <div class="ocean-sections">
+
+                <div class="ocean-section section-origin">
+                  <h4><span class="icon shell" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 C7 2 2 6 2 12 C2 18 6 22 12 22 C18 22 22 18 22 12 C22 6 17 2 12 2 Z"/></svg></span>Core Signature</h4>
+                  <p>Some people are wired for survival.<br>Some are wired for logic.<br><strong>You are wired for depth.</strong></p>
+                  <p><strong>Your nervous system processes:</strong></p>
+                  <ul>
+                    <li>emotion</li>
+                    <li>longing</li>
+                    <li>beauty</li>
+                    <li>grief</li>
+                    <li>love</li>
+                  </ul>
+                  <p>as if they were a language</p>
+                  <p>That’s why you often feel like you “knew” things before you lived them.</p>
+                </div>
+
+                <div class="ocean-section section-origin">
+                  <h4><span class="icon shell" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 C7 2 2 6 2 12 C2 18 6 22 12 22 C18 22 22 18 22 12 C22 6 17 2 12 2 Z"/></svg></span>ORIGIN</h4>
+                  <p>You carry what psychologists call oceanic consciousness — the ability to feel connected beyond the self. It feels like:</p>
+                  <ul>
+                    <li>Lemurian memory</li>
+                    <li>Atlantean depth</li>
+                    <li>ancient temples</li>
+                    <li>water, light, crystal</li>
+                  </ul>
+                  <p><strong>But what it really is:</strong></p>
+                  <p>A mind that remembers unity, not separation.</p>
+                  <p>This is why:</p>
+                  <ul>
+                    <li>crowds affect you</li>
+                    <li>music hits you deeply</li>
+                    <li>love feels overwhelming</li>
+                    <li>loss feels cosmic</li>
+                  </ul>
+                  <p>Your sensitivity is not fragility. It’s high-resolution emotional perception.</p>
+                </div>
+
+                <div class="ocean-section section-purpose">
+                  <h4><span class="icon shell" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 C7 2 2 6 2 12 C2 18 6 22 12 22 C18 22 22 18 22 12 C22 6 17 2 12 2 Z"/></svg></span>PURPOSE</h4>
+                  <p>You’re here to re-open people from the inside.</p>
+                  <p>Not through teaching. Not through preaching. But through presence.</p>
+                  <p>When you are authentic, people:</p>
+                  <ul>
+                    <li>cry</li>
+                    <li>confess</li>
+                    <li>soften</li>
+                    <li>remember who they are</li>
+                  </ul>
+                  <p>You don’t force healing. You invite it just by being real.</p>
+                  <p>This is why you are drawn to:</p>
+                  <ul>
+                    <li>singing</li>
+                    <li>beauty</li>
+                    <li>emotional truth</li>
+                    <li>deep connections</li>
+                    <li>spiritual language</li>
+                  </ul>
+                  <p>You translate what people feel but cannot say.</p>
+                </div>
+
+                <div class="ocean-section section-energy">
+                  <h4><span class="icon shell" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 C7 2 2 6 2 12 C2 18 6 22 12 22 C18 22 22 18 22 12 C22 6 17 2 12 2 Z"/></svg></span>ENERGY</h4>
+                  <p>Tidal. Magnetic. Sensual. Empathic.</p>
+                  <p>You absorb:</p>
+                  <ul>
+                    <li>moods</li>
+                    <li>pain</li>
+                    <li>longing</li>
+                    <li>atmosphere</li>
+                  </ul>
+                  <p>When misaligned, this feels like drowning. When aligned, it feels like becoming a lighthouse.</p>
+                  <p>You are not meant to carry everyone’s pain — you are meant to radiate clarity through it.</p>
+                </div>
+
+                <div class="ocean-section section-reflection">
+                  <h4><span class="icon shell" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 C7 2 2 6 2 12 C2 18 6 22 12 22 C18 22 22 18 22 12 C22 6 17 2 12 2 Z"/></svg></span>REFLECTION</h4>
+                  <p>Your heart is not “too much.”</p>
+                  <p>It is a high-capacity emotional organ in a low-empathy world.</p>
+                  <p>You are allowed to:</p>
+                  <ul>
+                    <li>protect it</li>
+                    <li>choose who enters</li>
+                    <li>rest</li>
+                    <li>still be luminous</li>
+                  </ul>
+                  <p>You don’t need to save anyone. Your job is simply to stay open without losing yourself.</p>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="ocean-holo">
+              <div class="holo-wrap">
+                <div class="holo ocean-blue">
+                  <div class="holo-spark s1"></div>
+                  <div class="holo-spark s2"></div>
+                  <div class="holo-spark s3"></div>
+                </div>
+                <div class="orbit"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `,
+      dimensional: `
+        <div class="result-dimensional">
+          <div class="dimensional-grid">
+            <div class="dimensional-content">
+              <button class="badge badge-dimensional" aria-pressed="false">PRIMARY CODE · DIMENSIONAL WANDERER</button>
+              <h2>You weren’t designed inside this reality.</h2>
+              <h3>“You came to shift consciousness, not to behave.”</h3>
+
+              <div class="dimensional-sections">
+                <div class="dimensional-section section-origin">
+                  <h4><span class="icon star" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l2.9 6.2L21 9l-5 3.7L17.8 21 12 17.7 6.2 21 7 12.7 2 9l6.1-0.8L12 2z"/></svg></span>ORIGIN</h4>
+                  <p>Your awareness originates in non-linear realms – grids, light-cities, timeline spaces, places without gravity. Earth feels dense and slow because your soul is used to moving faster than this.</p>
+                </div>
+
+                <div class="dimensional-section section-purpose">
+                  <h4>PURPOSE</h4>
+                  <p>You’re here to introduce a different way of seeing and being. Your ideas, art, presence or energy carry a signal that doesn’t fully belong to this era. You’re not here to blend in; you’re here to glitch the old pattern just enough that people notice there’s more.</p>
+                </div>
+
+                <div class="dimensional-section section-energy">
+                  <h4>ENERGY</h4>
+                  <p>Clear, electric, unusual. People feel you before they “get” you. You may think you’re alone or too strange, but really you are early. Your nervous system is learning how to hold high-frequency awareness inside a human body.</p>
+                </div>
+
+                <div class="dimensional-section section-reflection">
+                  <h4>REFLECTION</h4>
+                  <p>A big part of your path is trusting your signal even when others don’t understand it yet – and learning how to ground it so your own body feels safe.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="dimensional-holo">
+              <div class="holo-wrap">
+                <div class="holo">
+                  <div class="holo-spark s1"></div>
+                  <div class="holo-spark s2"></div>
+                  <div class="holo-spark s3"></div>
+                </div>
+                <div class="orbit"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `,
+      animal: `
+        <div class="result-animal">
+          <div class="animal-grid">
+
+            <div class="animal-content">
+              <button class="badge badge-animal" aria-pressed="false">PRIMARY CODE · ANIMAL-KIN GUARDIAN</button>
+              <h2>Your wisdom lives in your body.</h2>
+              <h3>“You came to protect life and restore something honest.”</h3>
+
+              <div class="animal-sections">
+                <div class="animal-section section-origin">
+                  <h4><span class="icon leaf" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 21s8-8 18-10c0 0-2 6-8 10-6 4-10 0-10 0z"/></svg></span>ORIGIN</h4>
+                  <p>Your soul emerged from non-human Earth consciousness — animals, forests, migration patterns, herds, packs, wild solitude.</p>
+                  <p><strong>This means:</strong></p>
+                  <ul>
+                    <li>You don’t experience life as “me vs the world”</li>
+                    <li>You experience life as field, belonging, territory, and bond</li>
+                  </ul>
+                  <p><strong>You were trained by Earth itself to know:</strong></p>
+                  <ul>
+                    <li>Who is safe</li>
+                    <li>Who is lying</li>
+                    <li>What is dying</li>
+                    <li>What is real</li>
+                  </ul>
+                  <p>before words existed.</p>
+                </div>
+
+                <div class="animal-section section-relationship">
+                  <h4><span class="icon heart" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21s-8-5.2-10-8.3C-1 7 5 4 8 7c1 1 2 2 4 2s3-1 4-2c3-3 9 0 6 5.7C20 15.8 12 21 12 21z"/></svg></span>RELATIONSHIP DYNAMICS</h4>
+                  <p>You love the way animals do:</p>
+                  <ul>
+                    <li>once</li>
+                    <li>fully</li>
+                    <li>without pretending</li>
+                    <li>without strategy</li>
+                  </ul>
+                  <p>You don’t do casual attachment well. You do bond or nothing.</p>
+                  <p>When someone breaks your trust, it doesn’t hurt — it feels like a pack being attacked.</p>
+                </div>
+
+                <div class="animal-section section-purpose">
+                  <h4><span class="icon paw" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 14c-4 0-7 3-7 5 0 1 1 2 2 2 5 0 10 0 12-3 0 0 0-3-7-4-1 0-2-0-2-0zM7 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm5-1a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm5 2a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg></span>PURPOSE IN THIS LIFE</h4>
+                  <p>You incarnated now because humanity has become disembodied.</p>
+                  <p><strong>Too many humans live:</strong></p>
+                  <ul>
+                    <li>in stories</li>
+                    <li>in anxiety</li>
+                    <li>in screens</li>
+                    <li>in fake politeness</li>
+                    <li>in self-betrayal</li>
+                  </ul>
+                  <p>You are here to re-animalize humans in the best way:</p>
+                  <ul>
+                    <li>back into their bodies</li>
+                    <li>back into real emotion</li>
+                    <li>back into instinct</li>
+                    <li>back into honest attachment</li>
+                  </ul>
+                  <p>You don’t heal people by explaining. You heal people by being real next to them.</p>
+                  <p>When you’re present, others start to:</p>
+                  <ul>
+                    <li>breathe deeper</li>
+                    <li>feel safer</li>
+                    <li>drop their mask</li>
+                    <li>remember themselves</li>
+                  </ul>
+                  <p>That is your medicine.</p>
+                </div>
+
+                <div class="animal-section section-energetic">
+                  <h4><span class="icon seed" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2c3 2 6 6 6 10 0 5-5 10-10 10 0 0 2-7 4-14z"/></svg></span>ENERGETIC TRAITS</h4>
+                  <ul>
+                    <li>You detect danger before it arrives</li>
+                    <li>You feel betrayal before it’s spoken</li>
+                    <li>You bond deeply and permanently</li>
+                    <li>You do not forget who hurt or protected you</li>
+                    <li>You become fierce when something you love is threatened</li>
+                  </ul>
+                  <p>Your nervous system is wired for: <strong>loyalty · territory · protection · truth</strong></p>
+                  <p>This is why:</p>
+                  <ul>
+                    <li>fake people exhaust you</li>
+                    <li>shallow social games feel repulsive</li>
+                    <li>manipulative charm makes your skin crawl</li>
+                  </ul>
+                  <p>Your body is not “too sensitive.” It is ancient and precise.</p>
+                </div>
+
+                <div class="animal-section section-shadow">
+                  <h4><span class="icon shield" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l8 4v6c0 5-4 9-8 10-4-1-8-5-8-10V6l8-4z"/></svg></span>SHADOW SIDE</h4>
+                  <p>Because you remember survival:</p>
+                  <ul>
+                    <li>you may become hyper-vigilant</li>
+                    <li>you may guard too hard</li>
+                    <li>you may struggle to relax around humans</li>
+                  </ul>
+                  <p>You are learning that: not every human world is a battlefield — even though your nervous system still checks.</p>
+                </div>
+
+                <div class="animal-section section-why">
+                  <h4><span class="icon foot" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2c-2 2-4 6-4 9 0 4 4 10 7 10s4-6 4-9c0-5-5-8-7-10z"/></svg></span>WHY YOU FEEL DIFFERENT</h4>
+                  <p>You were never meant to be a polite, domesticated version of yourself.</p>
+                  <p>You were meant to be:</p>
+                  <ul>
+                    <li>embodied</li>
+                    <li>present</li>
+                    <li>emotionally clean</li>
+                    <li>protective of life</li>
+                    <li>impossible to fake</li>
+                  </ul>
+                  <p>Your presence is supposed to feel like standing near something real and alive.</p>
+                </div>
+
+                <div class="animal-section section-truth">
+                  <h4><span class="icon star" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l2.9 6.2L21 9l-5 3.7L17.8 21 12 17.7 6.2 21 7 12.7 2 9l6.1-0.8L12 2z"/></svg></span>TRUTH CODE</h4>
+                  <p>You are not here to fit into modern society.</p>
+                  <p>You are here to restore something ancient inside it.</p>
+                  <p>When you trust your instincts, you are remembering who you were — and who humanity forgot how to be.</p>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="animal-holo">
+              <div class="holo-wrap">
+                <div class="holo">
+                  <div class="holo-spark s1"></div>
+                  <div class="holo-spark s2"></div>
+                  <div class="holo-spark s3"></div>
+                </div>
+                <div class="orbit"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `,
+      tech: `
+        <div class="result-tech">
+          <div class="tech-grid">
+            <div class="tech-content">
+              <button class="badge badge-tech" aria-pressed="false">PRIMARY CODE · TECH-LINKED NODE</button>
+              <h2>Your soul runs on architecture.</h2>
+              <h3>“You came to work with code – visible and invisible.”</h3>
+
+              <div class="tech-sections">
+                <div class="tech-section section-origin">
+                  <h4><span class="icon chip" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v16H4z M8 8h8v8H8z"/></svg></span>ORIGIN</h4>
+                  <p>Your consciousness is hybrid – part biological, part systemic. Past timelines or realms involved advanced technology, networks or fields of information. You naturally see reality in patterns, loops and structures.</p>
+                </div>
+
+                <div class="tech-section section-purpose">
+                  <h4><span class="icon chip" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v16H4z M8 8h8v8H8z"/></svg></span>PURPOSE</h4>
+                  <p>You’re here to understand and rewrite code: belief code, identity code, emotional code, social code, digital code. Where others see chaos, you see design. Where others see a wall, you see a system that can be changed.</p>
+                </div>
+
+                <div class="tech-section section-energy">
+                  <h4><span class="icon chip" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v16H4z M8 8h8v8H8z"/></svg></span>ENERGY</h4>
+                  <p>Focused, analytical, quietly intuitive. You don’t always lead with emotion, but you can feel the deeper architecture behind situations. You’re here to design or support systems that are more humane, intelligent and awake.</p>
+                </div>
+
+                <div class="tech-section section-reflection">
+                  <h4><span class="icon chip" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v16H4z M8 8h8v8H8z"/></svg></span>REFLECTION</h4>
+                  <p>If part of you has always felt “programmed”, it’s because you are – we all are. The difference is: you’re meant to become conscious of your interface and help others with theirs.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="tech-holo">
+              <div class="holo-wrap">
+                <div class="holo">
+                  <div class="holo-spark s1"></div>
+                  <div class="holo-spark s2"></div>
+                  <div class="holo-spark s3"></div>
+                </div>
+                <div class="orbit"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `
+    };
+
+    // --- DOM ---
+    const quizSection = document.getElementById("quiz-section");
+    const resultPage  = document.getElementById("result-page");
+
+    const progressLabel = document.getElementById("progress-label");
+    const progressInner = document.getElementById("progress-inner");
+    const questionContainer = document.getElementById("question-container");
+    const backBtn = document.getElementById("back-btn");
+    const nextBtn = document.getElementById("next-btn");
+
+    const resultDiv = document.getElementById("result");
+    const retakeBtn = document.getElementById("retake-btn");
+    const backToQuizBtn = document.getElementById("back-to-quiz-btn");
+
+    let currentIndex = 0;
+    let answers = new Array(questions.length).fill(null);
+    let inTieBreaker = false;
+
+    function showQuizPage(){
+      resultPage.classList.add("hidden");
+      quizSection.classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      renderQuestion();
+    }
+
+    function showResultPage(){
+      quizSection.classList.add("hidden");
+      resultPage.classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function updateProgress(){
+      // During tie-breaker we show full bar and custom label
+      if(inTieBreaker){
+        progressLabel.textContent = "Clarifying your signal…";
+        if(progressInner) progressInner.style.width = "100%";
+        return;
+      }
+      const total = questions.length;
+      const index = currentIndex + 1;
+      progressLabel.textContent = `Question ${index} / ${total}`;
+      if(progressInner) progressInner.style.width = `${(index / total) * 100}%`;
+    }
+
+    function renderQuestion(){
+      inTieBreaker = false;
+      updateProgress();
+
+      const q = questions[currentIndex];
+      questionContainer.innerHTML = "";
+
+      const qText = document.createElement("div");
+      qText.className = "question-text";
+      qText.textContent = q.text;
+      questionContainer.appendChild(qText);
+
+      const answersDiv = document.createElement("div");
+      answersDiv.className = "answers";
+
+      q.answers.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "answer";
+        btn.dataset.index = idx;
+        btn.dataset.type = ans.type;
+
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "label";
+        labelSpan.textContent = ["A","B","C","D","E"][idx] + ".";
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = ans.text;
+
+        btn.appendChild(labelSpan);
+        btn.appendChild(textSpan);
+
+        if (answers[currentIndex] === idx) btn.classList.add("selected");
+
+        btn.addEventListener("click", () => {
+          Array.from(answersDiv.children).forEach(el => el.classList.remove("selected"));
+          btn.classList.add("selected");
+          answers[currentIndex] = idx;
+          nextBtn.disabled = false;
+        });
+
+        answersDiv.appendChild(btn);
+      });
+
+      questionContainer.appendChild(answersDiv);
+
+      // backBtn.disabled = currentIndex === 0;
+      nextBtn.textContent = currentIndex === questions.length - 1 ? "See my result →" : "Next →";
+      nextBtn.disabled = answers[currentIndex] === null;
+      nextBtn.dataset.tieType = "";
+    }
+
+    function renderTieBreaker(maxTypes){
+      inTieBreaker = true;
+      updateProgress();
+
+      questionContainer.innerHTML = "";
+
+      const qText = document.createElement("div");
+      qText.className = "question-text";
+      qText.textContent = tieBreaker.text;
+      questionContainer.appendChild(qText);
+
+      const answersDiv = document.createElement("div");
+      answersDiv.className = "answers";
+
+      tieBreaker.answers.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "answer";
+        btn.dataset.type = ans.type;
+
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "label";
+        labelSpan.textContent = ["A","B","C","D","E"][idx] + ".";
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = ans.text;
+
+        btn.appendChild(labelSpan);
+        btn.appendChild(textSpan);
+
+        btn.addEventListener("click", () => {
+          Array.from(answersDiv.children).forEach(el => el.classList.remove("selected"));
+          btn.classList.add("selected");
+          nextBtn.disabled = false;
+          nextBtn.dataset.tieType = ans.type;
+        });
+
+        answersDiv.appendChild(btn);
+      });
+
+      questionContainer.appendChild(answersDiv);
+
+      backBtn.disabled = true;
+      nextBtn.textContent = "Show my result →";
+      nextBtn.disabled = true;
+    }
+
+    function calculateResult(){
+      const counts = { earth:0, ocean:0, dimensional:0, animal:0, tech:0 };
+
+      answers.forEach((ansIndex, qIndex) => {
+        if (ansIndex === null) return;
+        const type = questions[qIndex].answers[ansIndex].type;
+        counts[type]++;
+      });
+
+      let max = -1;
+      let maxTypes = [];
+
+      TYPES.forEach(t => {
+        const c = counts[t];
+        if (c > max){
+          max = c;
+          maxTypes = [t];
+        } else if (c === max){
+          maxTypes.push(t);
+        }
+      });
+
+      if (maxTypes.length > 1){
+        renderTieBreaker(maxTypes);
+      } else {
+        showResult(maxTypes[0] || "earth");
+      }
+    }
+
+    function showResult(type){
+      // IMPORTANT: results HTML is not changed (we render exactly your resultsContent[type])
+      resultDiv.innerHTML = resultsContent[type];
+
+      // decorate the result panel for the selected type
+      const rs = document.querySelector('.result-shell');
+      rs.classList.remove('result-earth','result-ocean','result-dimensional','result-animal','result-tech');
+      rs.classList.add('result-'+type);
+
+      showResultPage();
+      attachCardHoverHandlers();
+    }
+
+
+
+    // attach hover listeners so card hover can dim the holo (adds/removes .card-hover on .result-shell)
+    function attachCardHoverHandlers(){
+      const rs = document.querySelector('.result-shell');
+      if (!rs) return;
+      rs.querySelectorAll('.card, .animal-section, .ocean-section, .earth-section, .tech-section, .dimensional-section').forEach(el=>{
+        el.addEventListener('mouseenter', ()=> rs.classList.add('card-hover'));
+        el.addEventListener('mouseleave', ()=> rs.classList.remove('card-hover'));
+        el.addEventListener('touchstart', ()=> rs.classList.add('card-hover'));
+        el.addEventListener('touchend', ()=> rs.classList.remove('card-hover'));
+      });
+    }
+
+    // --- events ---
+    backBtn.addEventListener("click", () => {
+      if(currentIndex === 0){
+        window.location.href = "index.html";
+        return;
+      }
+      else if (!inTieBreaker && currentIndex > 0){
+        currentIndex--;
+        renderQuestion();
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (inTieBreaker){
+        const tieType = nextBtn.dataset.tieType;
+        if (!tieType) return;
+        showResult(tieType);
+        return;
+      }
+
+      if (answers[currentIndex] === null) return;
+
+      if (currentIndex < questions.length - 1){
+        currentIndex++;
+        renderQuestion();
+      } else {
+        calculateResult();
+      }
+    });
+
+    retakeBtn.addEventListener("click", () => {
+      currentIndex = 0;
+      answers = new Array(questions.length).fill(null);
+      inTieBreaker = false;
+      showQuizPage();
+    });
+
+    backToQuizBtn.addEventListener("click", () => {
+      // go back to last answered question for review
+      showQuizPage();
+    });
+
+    // init
+    showQuizPage();
+
+    // Dev preview handlers + shortcut (press 'D' to toggle visibility)
+    (function(){
+      const dev = document.getElementById('dev-preview');
+      if(!dev) return;
+
+      dev.addEventListener('click', (ev)=>{
+        const btn = ev.target.closest('.dev-btn');
+        if(!btn) return;
+        const type = btn.dataset.type;
+        if(type && ['earth','ocean','dimensional','animal','tech'].includes(type)){
+          showResult(type);
+          return;
+        }
+        if(btn.id === 'dev-back'){
+          showQuizPage();
+          return;
+        }
+      });
+
+      // keyboard shortcut: D to toggle visibility
+      let visible = true;
+      document.addEventListener('keydown', (ev)=>{
+        if(ev.key.toLowerCase() === 'd' && (ev.ctrlKey||ev.metaKey||ev.shiftKey) === false){
+          visible = !visible;
+          dev.style.display = visible ? 'flex' : 'none';
+        }
+      });
+    })();
+
+    // Quick preview mode: open ORIGIN.html?preview=earth (or ocean/dimensional/animal/tech)
+    (function(){
+      try{
+        const params = new URLSearchParams(location.search);
+        const p = params.get('preview') || (location.hash ? location.hash.slice(1) : null);
+        if(p && ['earth','ocean','dimensional','animal','tech'].includes(p)){
+          console.log('Preview mode:', p);
+          setTimeout(()=> showResult(p), 350);
+        }
+      }catch(e){ /* ignore */ }
+    })();
+  </script>
+</body>
+</html>

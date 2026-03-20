@@ -1,0 +1,733 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Soul Purpose Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+      background:#020611;
+      color:#f5f7ff;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:24px;
+      overflow:hidden;
+    }
+    .frame{
+      position:relative;
+      max-width:1200px;
+      width:100%;
+      border-radius:26px;
+      padding:26px 30px 24px;
+      background:radial-gradient(circle at top,#17263f 0%,#050a16 50%,#02040b 100%);
+      border:1px solid rgba(158,188,255,0.25);
+      box-shadow:0 0 36px rgba(0,0,0,0.85);
+      overflow:hidden;
+    }
+
+    /* little pink particles */
+    .butterfly{
+      position:absolute;
+      width:15px;
+      height:11px;
+      border-radius:50% 50% 40% 40%;
+      background:radial-gradient(circle,#ff9ae9 0%,rgba(255,154,233,0) 70%);
+      opacity:.9;
+      filter:blur(.4px);
+      mix-blend-mode:screen;
+      animation:flutter 16s linear infinite;
+      pointer-events:none;
+    }
+    .butterfly:before,
+    .butterfly:after{
+      content:"";
+      position:absolute;
+      width:10px;
+      height:8px;
+      border-radius:50%;
+      background:radial-gradient(circle,#ffd6ff 0%,rgba(255,214,255,0) 75%);
+      top:-2px;
+    }
+    .butterfly:before{left:-6px;transform:rotate(-12deg);}
+    .butterfly:after{right:-6px;transform:rotate(12deg);}
+    @keyframes flutter{
+      0%{transform:translate3d(-40px,40px,0) scale(.7);opacity:0;}
+      10%{opacity:1;}
+      50%{transform:translate3d(130px,-120px,0) scale(1);}
+      90%{opacity:.3;}
+      100%{transform:translate3d(230px,-210px,0) scale(.8);opacity:0;}
+    }
+    .pb1{top:78%;left:4%;animation-delay:1s;}
+    .pb2{top:84%;left:14%;animation-delay:5s;}
+    .pb3{top:72%;left:24%;animation-delay:9s;}
+
+    .head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:11px;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      color:rgba(210,228,255,0.8);
+      margin-bottom:18px;
+    }
+    .head-right{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      font-size:10px;
+    }
+    .lang{
+      display:flex;
+      border-radius:999px;
+      border:1px solid rgba(148,180,255,0.4);
+      overflow:hidden;
+    }
+    .lang span{
+      padding:4px 9px;
+      opacity:.6;
+      cursor:pointer;
+    }
+    .lang span.active{
+      background:rgba(133,194,255,0.2);
+      opacity:1;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr);
+      gap:32px;
+      align-items:center;
+    }
+
+    /* CAPSULE + LASER */
+    .capsule-wrap{
+      position:relative;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:44px 0;
+    }
+    .capsule{
+      width:210px;
+      height:260px;
+      border-radius:46%;
+      background:
+        radial-gradient(circle at 50% 0%,rgba(255,255,255,0.96),transparent 52%) top/100% 50% no-repeat,
+        radial-gradient(circle at 50% 100%,#1b2f63,#071021);
+      box-shadow:0 0 40px rgba(130,220,255,0.9);
+      position:relative;
+      overflow:hidden;
+      animation:capsuleFloat 6s ease-in-out infinite alternate;
+    }
+    .capsule-inner{
+      position:absolute;
+      inset:18px;
+      border-radius:40%;
+      border:1px solid rgba(255,255,255,0.18);
+      box-shadow:inset 0 0 32px rgba(0,0,0,0.7);
+      overflow:hidden;
+    }
+    .capsule-line{
+      position:absolute;
+      left:10%;
+      right:10%;
+      top:50%;
+      height:1px;
+      background:linear-gradient(90deg,transparent,#7ecbff,transparent);
+      opacity:.7;
+    }
+
+    /* vertical laser */
+    .scan-line{
+      position:absolute;
+      top:8%;
+      bottom:8%;
+      width:3px;
+      left:50%;
+      transform:translateX(-50%);
+      background:linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(163,255,255,0.0) 10%,
+        rgba(163,255,255,0.75) 30%,
+        rgba(255,255,255,1) 50%,
+        rgba(163,255,255,0.75) 70%,
+        rgba(163,255,255,0.0) 90%,
+        transparent 100%
+      );
+      box-shadow:0 0 18px rgba(163,255,255,0.9);
+      opacity:.85;
+      animation:scanBeam 3.4s ease-in-out infinite;
+    }
+
+    .capsule-orbit{
+      position:absolute;
+      width:210px;
+      height:50px;
+      border-radius:50%;
+      bottom:-6px;
+      background:radial-gradient(circle at 50% 0,rgba(170,255,255,0.9),transparent 65%);
+      filter:blur(8px);
+      animation:orbitPulse 6s ease-in-out infinite alternate;
+    }
+    .capsule-label{
+      text-align:center;
+      font-size:11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:rgba(207,222,255,0.9);
+      margin-top:10px;
+    }
+    .status-row{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      margin-top:10px;
+      font-size:10px;
+    }
+    .pill{
+      border-radius:999px;
+      padding:4px 9px;
+      border:1px solid rgba(126,202,255,0.6);
+      background:rgba(10,30,55,0.85);
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .pill-dot{
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:#4dfef6;
+      box-shadow:0 0 10px rgba(96,255,245,0.8);
+    }
+
+    @keyframes capsuleFloat{
+      0%{transform:translateY(18px) scale(0.96);}
+      50%{transform:translateY(-22px) scale(1.05);}
+      100%{transform:translateY(12px) scale(0.98);}
+    }
+    @keyframes orbitPulse{
+      0%{opacity:.7;transform:scale(0.96);}
+      50%{opacity:1;transform:scale(1.05);}
+      100%{opacity:.75;transform:scale(0.98);}
+    }
+    @keyframes scanBeam{
+      0%{transform:translate(-50%,-60%);}
+      50%{transform:translate(-50%,55%);}
+      100%{transform:translate(-50%,-60%);}
+    }
+
+    .panel{
+      border-radius:18px;
+      border:1px solid rgba(164,192,255,0.5);
+      background:radial-gradient(circle at top,#07142c,#040915);
+      box-shadow:0 0 26px rgba(0,0,0,0.78);
+      padding:18px 20px 16px;
+    }
+    .q-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:12px;
+      color:rgba(199,216,252,0.85);
+      margin-bottom:10px;
+    }
+    .q-title{
+      font-size:16px;
+      margin-bottom:12px;
+    }
+    .answers{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-bottom:14px;
+    }
+    .option{
+      border-radius:999px;
+      border:1px solid rgba(136,162,227,0.55);
+      padding:10px 12px;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      transition:background .12s ease,border-color .12s ease;
+    }
+    .option input{accent-color:#4cf7ff;}
+    .option:hover{
+      border-color:rgba(184,210,255,0.95);
+      background:rgba(120,163,255,0.2);
+    }
+    .nav{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:6px;
+    }
+    .btn-small{
+      border-radius:999px;
+      border:1px solid rgba(160,185,245,0.65);
+      background:transparent;
+      color:rgba(221,233,255,0.9);
+      padding:7px 14px;
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      cursor:pointer;
+    }
+    .btn-small.primary{
+      border:none;
+      background:radial-gradient(circle at 0 0,#56fff6,#13d3ff);
+      color:#021019;
+      box-shadow:0 0 20px rgba(106,255,243,0.85);
+    }
+    .hint{
+      font-size:11px;
+      color:rgba(184,201,238,0.8);
+      margin-top:10px;
+    }
+
+    /* RESULT STATE */
+    .result-shell{
+      display:none;
+      grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr);
+      gap:32px;
+      align-items:flex-start;
+    }
+    .result-shell.active{display:grid;}
+    .result-tag{
+      font-size:11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      margin-bottom:6px;
+      color:rgba(186,208,255,0.9);
+    }
+    #result-html{
+      font-size:13px;
+      line-height:1.5;
+      color:rgba(215,228,255,0.9);
+    }
+    #result-html h3{font-size:22px;margin-bottom:6px;}
+    #result-html p{margin-bottom:8px;}
+    #result-html ul{margin:8px 0 4px 18px;}
+
+    .email-box{
+      margin-top:10px;
+      padding-top:8px;
+      border-top:1px solid rgba(160,185,245,0.5);
+      font-size:12px;
+    }
+    .email-form{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+      align-items:center;
+    }
+    .email-form input{
+      min-width:210px;
+      border-radius:999px;
+      border:1px solid rgba(169,194,255,0.9);
+      background:rgba(3,8,20,0.9);
+      padding:7px 11px;
+      color:#e8f0ff;
+      font-size:11px;
+    }
+    .email-form button{
+      border-radius:999px;
+      border:none;
+      padding:7px 12px;
+      font-size:10px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      background:linear-gradient(90deg,#75ffe2,#3fd3ff);
+      color:#000814;
+      cursor:pointer;
+    }
+    .back-dash{
+      margin-top:10px;
+      font-size:11px;
+      color:rgba(175,195,240,0.85);
+    }
+
+    /* capsule result colour tints */
+    .capsule.earth{
+      background:
+        radial-gradient(circle at 50% 0%,rgba(255,255,255,0.96),transparent 52%) top/100% 50% no-repeat,
+        radial-gradient(circle at 50% 100%,#54ffb1,#1f8a4b);
+      box-shadow:0 0 55px rgba(118,255,214,1);
+    }
+    .capsule.ocean{
+      background:
+        radial-gradient(circle at 50% 0%,rgba(255,255,255,0.96),transparent 52%) top/100% 50% no-repeat,
+        radial-gradient(circle at 50% 100%,#2a8cff,#6ef2ff);
+      box-shadow:0 0 55px rgba(134,200,255,1);
+    }
+    .capsule.dimensional{
+      background:
+        radial-gradient(circle at 50% 0%,rgba(255,255,255,0.96),transparent 52%) top/100% 50% no-repeat,
+        radial-gradient(circle at 50% 100%,#b95cff,#5a35ff);
+      box-shadow:0 0 55px rgba(214,169,255,1);
+    }
+    .capsule.animal{
+      background:
+        radial-gradient(circle at 50% 0%,rgba(255,255,255,0.96),transparent 52%) top/100% 50% no-repeat,
+        radial-gradient(circle at 50% 100%,#ffb43b,#ff5c2b);
+      box-shadow:0 0 55px rgba(255,196,117,1);
+    }
+    .capsule.tech{
+      background:
+        radial-gradient(circle at 50% 0%,rgba(255,255,255,0.96),transparent 52%) top/100% 50% no-repeat,
+        radial-gradient(circle at 50% 100%,#3dffea,#34a1ff);
+      box-shadow:0 0 55px rgba(141,255,246,1);
+    }
+
+    @media(max-width:900px){
+      .layout,.result-shell{grid-template-columns:1fr;}
+    }
+    @media(max-width:640px){
+      body{padding:12px;}
+      .frame{padding:18px 14px;}
+    }
+
+    .test-label { display: none !important; }
+
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <!-- little drifting particles -->
+    <div class="butterfly pb1"></div>
+    <div class="butterfly pb2"></div>
+    <div class="butterfly pb3"></div>
+
+    <div class="head">
+      <span>SOUL INTERFACE · PURPOSE LAYER</span>
+      <div class="head-right">
+        <div class="lang">
+          <span class="active">EN</span>
+          <span>PL</span>
+        </div>
+        <span style="opacity:.7;">sound • ●</span>
+      </div>
+    </div>
+
+    <!-- QUESTION MODE -->
+    <div id="quiz-shell" class="layout">
+      <div>
+        <div class="capsule-wrap">
+          <div id="capsule" class="capsule">
+            <div class="capsule-inner">
+              <div class="scan-line"></div>
+            </div>
+            <div class="capsule-line"></div>
+          </div>
+          <div class="capsule-orbit"></div>
+        </div>
+        <div class="capsule-label">Subject: Human Incarnation</div>
+        <div class="status-row">
+          <div class="pill">
+            <span class="pill-dot"></span><span>Signal: calibrating...</span>
+          </div>
+          <div class="pill">
+            <span class="pill-dot"></span><span>Channel: purpose layer</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="q-header">
+            <span id="q-counter">Question 1 / 15</span>
+            <button class="btn-small" onclick="window.location.href='index.html'">← Dashboard</button>
+          </div>
+          <div id="q-text" class="q-title"></div>
+          <div id="answer-list" class="answers"></div>
+          <div class="nav">
+            <button class="btn-small" onclick="prevQuestion()">← Back</button>
+            <button class="btn-small primary" onclick="nextQuestion()">Next →</button>
+          </div>
+        </div>
+        <div class="hint">
+          Answer honestly. This isn’t about perfection – it’s about pattern.
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT MODE -->
+    <div id="result-shell" class="result-shell">
+      <div>
+        <div class="capsule-wrap">
+          <div id="capsule-result" class="capsule">
+            <div class="capsule-inner">
+              <div class="scan-line"></div>
+            </div>
+            <div class="capsule-line"></div>
+          </div>
+          <div class="capsule-orbit"></div>
+        </div>
+        <div class="capsule-label" id="result-short"></div>
+      </div>
+
+      <div>
+        <div class="result-tag" id="result-tag"></div>
+        <div id="result-html"></div>
+
+        <div class="email-box">
+          <p>
+            If you want a deeper, personalised decode of this code pattern or to unlock the next test,
+            you can leave your email. I’ll send you more detail (+ payment link, ~£5).
+          </p>
+          <form class="email-form" method="post" action="mailto:YOUR_EMAIL_HERE@example.com" enctype="text/plain">
+            <input type="email" name="email" placeholder="your@email.com" required />
+            <button type="submit">Yes, send me more</button>
+          </form>
+
+          <div class="back-dash">
+            Or you can skip email and go straight to the Soul Health test later from the dashboard.
+          </div>
+        </div>
+
+        <div class="back-dash" style="margin-top:10px;">
+          <button class="btn-small" onclick="window.location.href='index.html'">← Back to Dashboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- PURPOSE QUESTIONS (15) ----------
+    // A = "soul guide" / deep-feeling, B = "bridge", C = "builder / system"
+    const purposeQuestions = [
+      {
+        q: "When you imagine your ideal day, what are you doing most of the time?",
+        A: "Being with people deeply – listening, guiding, or holding space.",
+        B: "Moving between worlds – creating, performing, connecting different groups.",
+        C: "Building or running something – a project, system, business or tool."
+      },
+      {
+        q: "What kind of compliments hit you the deepest?",
+        A: "\"You really understood me.\"",
+        B: "\"You inspire me / you’re so creative.\"",
+        C: "\"You’re so capable / you make things happen.\""
+      },
+      {
+        q: "When someone you love is in pain, what do you instinctively want to offer first?",
+        A: "Presence and emotional safety.",
+        B: "New perspective, ideas, possibilities.",
+        C: "Practical steps and solutions."
+      },
+      {
+        q: "If you had to choose, where does your energy feel most natural?",
+        A: "One-on-one or very small groups.",
+        B: "Medium groups, collabs, projects.",
+        C: "Big visions, systems, structures."
+      },
+      {
+        q: "What triggers your inner 'this is not my life' alarm the fastest?",
+        A: "Shallow connections and pretending everything is fine.",
+        B: "Being stuck in something repetitive with no creativity.",
+        C: "Disorganisation, chaos and wasted potential."
+      },
+      {
+        q: "Which sentence feels closest?",
+        A: "I’m here to heal, soften or awaken people.",
+        B: "I’m here to express something unique and connect worlds.",
+        C: "I’m here to build something real that changes reality."
+      },
+      {
+        q: "What kind of exhaustion feels the worst for you?",
+        A: "Emotional burnout – I can’t hold anyone anymore.",
+        B: "Creative burnout – nothing excites or inspires me.",
+        C: "Decision burnout – too many moving pieces, no structure."
+      },
+      {
+        q: "What do people accidentally use you for?",
+        A: "Free therapy / emotional processing.",
+        B: "Motivation, ideas, entertainment.",
+        C: "Advice, planning, organisation."
+      },
+      {
+        q: "When you were a child, what were you secretly doing in your head most of the time?",
+        A: "Imagining conversations, feelings, alternate emotional scenes.",
+        B: "Imagining stories, performances, worlds, characters.",
+        C: "Imagining systems, plans, future achievements."
+      },
+      {
+        q: "If you had to choose one superpower to keep, which one feels most like you already?",
+        A: "Seeing into people’s hearts.",
+        B: "Seeing the bigger picture and possibilities.",
+        C: "Seeing how to make something actually work."
+      },
+      {
+        q: "Which failure would hurt you the most?",
+        A: "Hurting someone I love because I wasn’t present.",
+        B: "Never expressing what I really had inside.",
+        C: "Never building anything that truly lasted."
+      },
+      {
+        q: "What do you want your presence to do to a room?",
+        A: "Make people feel safe and seen.",
+        B: "Wake people up and make them feel alive.",
+        C: "Bring clarity, structure and direction."
+      },
+      {
+        q: "What kind of responsibility feels almost natural, even if it’s heavy?",
+        A: "Being the emotional anchor.",
+        B: "Being the connector / creative engine.",
+        C: "Being the organiser / decision holder."
+      },
+      {
+        q: "What would you rather be remembered for?",
+        A: "How deeply I loved and understood people.",
+        B: "How I expressed myself and shifted culture.",
+        C: "What I built that changed something tangible."
+      },
+      {
+        q: "When you imagine your future, what’s the clearest part?",
+        A: "The people who will be with me.",
+        B: "The scenes, stages or creations.",
+        C: "The project, structure or thing I’m building."
+      }
+    ];
+
+    let indexQ = 0;
+    const answers = []; // store "A" / "B" / "C"
+
+    const qText = document.getElementById("q-text");
+    const qCounter = document.getElementById("q-counter");
+    const list = document.getElementById("answer-list");
+
+    function renderQuestion(){
+      const item = purposeQuestions[indexQ];
+      qCounter.textContent = `Question ${indexQ+1} / ${purposeQuestions.length}`;
+      qText.textContent = item.q;
+      list.innerHTML = "";
+      ["A","B","C"].forEach(letter=>{
+        const text = item[letter];
+        const label = document.createElement("label");
+        label.className = "option";
+        const id = `q${indexQ}-${letter}`;
+        label.innerHTML =
+          `<input type="radio" id="${id}" name="q${indexQ}" value="${letter}">` +
+          `<span><strong>${letter}.</strong> ${text}</span>`;
+        list.appendChild(label);
+      });
+
+      // restore selection
+      if(answers[indexQ]){
+        const input = document.querySelector(`input[name="q${indexQ}"][value="${answers[indexQ]}"]`);
+        if(input) input.checked = true;
+      }
+    }
+
+    function nextQuestion(){
+      const selected = document.querySelector(`input[name="q${indexQ}"]:checked`);
+      if(selected) answers[indexQ] = selected.value;
+      if(indexQ < purposeQuestions.length - 1){
+        indexQ++;
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function prevQuestion(){
+      if(indexQ === 0){
+        window.location.href = "index.html";
+        return;
+      }
+      const selected = document.querySelector(`input[name="q${indexQ}"]:checked`);
+      if(selected) answers[indexQ] = selected.value;
+      indexQ--;
+      renderQuestion();
+    }
+
+    function showResult(){
+      // count A / B / C
+      let countA = 0, countB = 0, countC = 0;
+      answers.forEach(letter=>{
+        if(letter === "A") countA++;
+        else if(letter === "B") countB++;
+        else if(letter === "C") countC++;
+      });
+
+      let type, tag, title, main, points, path, capsuleClass, shortLabel;
+
+      if(countA >= countB && countA >= countC){
+        type = "guide";
+        capsuleClass = "earth";
+        shortLabel = "Soul Purpose Type: GUIDE";
+        tag = "DEEP SOUL GUIDE";
+        title = "You’re built to hold depth.";
+        main = "Your purpose code is wired around emotional truth. You’re here to see, feel and stabilise the invisible. People open around you without knowing why.";
+        points = [
+          "You read people quickly and feel what they don’t say.",
+          "You can’t stay in environments that force you to be fake.",
+          "You naturally hold space, even when nobody asked you to."
+        ];
+        path = "Your biggest risk is over-caring and trying to heal everyone. Your real path is choosing a few souls, projects or spaces where your depth is actually received – and letting the rest go.";
+      } else if(countB >= countA && countB >= countC){
+        type = "bridge";
+        capsuleClass = "ocean";
+        shortLabel = "Soul Purpose Type: BRIDGE";
+        tag = "CREATIVE BRIDGE";
+        title = "You’re built to connect worlds.";
+        main = "Your purpose code is wired around expression and translation. You turn feelings, ideas and frequencies into something people can actually feel or see.";
+        points = [
+          "You move between groups easily and can speak many 'languages'.",
+          "You get bored if you can’t grow or experiment.",
+          "You feel most alive when you’re creating and sharing."
+        ];
+        path = "Your risk is scattering your energy or performing for the wrong audience. Your real path is choosing the message you want to carry and the world you want to stand between – then building slowly, on purpose.";
+      } else {
+        type = "builder";
+        capsuleClass = "tech";
+        shortLabel = "Soul Purpose Type: BUILDER";
+        tag = "VISIONARY BUILDER";
+        title = "You’re built to make things real.";
+        main = "Your purpose code is wired around structure, systems and long arcs. You’re here to turn invisible ideas into something that actually exists and keeps working.";
+        points = [
+          "You see how things work – and how they could work better.",
+          "You hold responsibility even when nobody officially gave it to you.",
+          "You think in timelines, logistics and big-picture impact."
+        ];
+        path = "Your risk is living only in your head and forgetting your heart. Your real path is building from what your soul knows is true – not just what looks smart or safe on paper.";
+      }
+
+      // switch views
+      document.getElementById("quiz-shell").style.display = "none";
+      const resultShell = document.getElementById("result-shell");
+      resultShell.classList.add("active");
+
+      const cap = document.getElementById("capsule-result");
+      cap.classList.remove("earth","ocean","dimensional","animal","tech");
+      cap.classList.add(capsuleClass);
+
+      document.getElementById("result-short").textContent = shortLabel;
+      document.getElementById("result-tag").textContent = tag;
+
+      const ul = document.createElement("ul");
+      points.forEach(p=>{ const li = document.createElement("li"); li.textContent = p; ul.appendChild(li); });
+      const resultHtml = `
+        <h3>${title}</h3>
+        <p>${main}</p>
+      `;
+      document.getElementById("result-html").innerHTML = resultHtml;
+      document.getElementById("result-html").appendChild(ul);
+      const pathP = document.createElement("p"); pathP.innerHTML = `<strong>Path:</strong> ${path}`;
+      document.getElementById("result-html").appendChild(pathP);
+    }
+
+    // init
+    renderQuestion();
+  </script>
+</body>
+</html>

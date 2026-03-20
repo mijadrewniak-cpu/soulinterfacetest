@@ -1,0 +1,952 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Soul Interface — Brain Map</title>
+  <style>
+    :root{
+      --bg:#05070c;
+      --panel:#0b1020cc;
+      --panelSolid:#0b1020;
+      --text:#eaf0ff;
+      --muted:#a9b4d6;
+      --line:#233055;
+      --good:#31d07f;
+      --mid:#f0c74c;
+      --bad:#ff4d4d;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+    }
+
+    @keyframes neonGlow {
+      0%, 100% { 
+        box-shadow: 0 0 20px rgba(255,59,107,.4), 0 0 40px rgba(255,59,107,.25), 0 8px 30px rgba(0,0,0,.5);
+      }
+      50% { 
+        box-shadow: 0 0 30px rgba(255,59,107,.6), 0 0 60px rgba(255,59,107,.35), 0 8px 30px rgba(0,0,0,.5);
+      }
+    }
+
+    @keyframes dropIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 20%, #0d1b3a 0%, var(--bg) 55%);
+      color:#ffffff;
+      overflow-x:hidden;
+    }
+
+    /* Layout */
+    .page{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:14px 14px 18px;
+    }
+
+    /* Top timeline */
+    .timelineBar{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      padding:12px 14px;
+      border:2px solid rgba(255,59,107,.21);
+      background: radial-gradient(ellipse at center, rgba(75,95,155,.35), rgba(40,55,95,.25) 60%, rgba(0,0,0,.4));
+      border-radius:26px;
+      box-shadow: 0 0 30px rgba(255,59,107,.45), 0 8px 30px rgba(0,0,0,.5);
+      backdrop-filter: blur(14px);
+    }
+    .timelineLabels{
+      display:flex;
+      position:relative;
+      width:min(900px, 100%);
+      font-size:14.7px;
+      color:#ffffff;
+      margin-top:8px;
+      height:18px;
+    }
+    .timelineLabels span{
+      position:absolute;
+      transform:translateX(-50%);
+    }
+    .timelineLabels span:nth-child(1){ left:0%; }
+    .timelineLabels span:nth-child(2){ left:36%; opacity:0.7; }
+    .timelineLabels span:nth-child(3){ left:68%; }
+    .timelineLabels span:nth-child(4){ left:105%; }
+    .timelineWrap{
+      width:min(990px, 100%);
+      padding:4px 7px 8px;
+      position:relative;
+    }
+    .timelineHint{
+      margin-top:6px;
+      font-size:14.7px;
+      letter-spacing:.18em;
+      color:#ffffff;
+      opacity:.85;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;
+      padding:6px 12px;
+      box-shadow: 0 0 18px rgba(255,255,255,.08);
+    }
+    input[type="range"]{
+      width:100%;
+      height:8px;
+      -webkit-appearance:none;
+      appearance:none;
+      background: linear-gradient(to right, rgba(49,208,127,.53) 0%, rgba(49,208,127,.53) var(--progress, 0%), rgba(255,255,255,.08) var(--progress, 0%), rgba(255,255,255,.08) 100%);
+      border:1px solid rgba(255,255,255,.25);
+      border-radius:999px;
+      box-shadow: 0 0 26px rgba(49,208,127,.85), 0 0 12px rgba(49,208,127,.55), 0 6px 20px rgba(0,0,0,.35);
+      outline:none;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:8px;
+      border-radius:999px;
+      background: transparent;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      appearance: none;
+      width:27px;
+      height:27px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.95), rgba(255,255,255,.4) 25%, rgba(255,255,255,.1) 45%, transparent 65%),
+        radial-gradient(circle at 50% 50%, rgba(255,150,200,.65), rgba(255,100,170,.35) 50%, transparent 75%),
+        radial-gradient(circle at 70% 75%, rgba(0,0,0,.15), transparent 60%);
+      border:1px solid rgba(255,255,255,.5);
+      box-shadow: 
+        inset 0 -2px 8px rgba(0,0,0,.25),
+        inset 0 2px 6px rgba(255,255,255,.4),
+        0 0 20px rgba(255,150,200,.75), 
+        0 0 10px rgba(255,255,255,.4), 
+        0 8px 18px rgba(0,0,0,.5);
+      transform: translate(-5%, -52%);
+      transition: transform .15s ease, box-shadow .15s ease, background .3s ease;
+    }
+    input[type="range"]:active::-webkit-slider-thumb{
+      transform: translate(-5%, -52%) scale(1.25);
+      box-shadow: 
+        inset 0 -2px 8px rgba(0,0,0,.3),
+        inset 0 2px 6px rgba(255,255,255,.5),
+        0 0 26px rgba(255,200,230,.65), 
+        0 12px 22px rgba(0,0,0,.6);
+    }
+    input[type="range"]::-moz-range-thumb{
+      width:27px;
+      height:27px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.95), rgba(255,255,255,.4) 25%, rgba(255,255,255,.1) 45%, transparent 65%),
+        radial-gradient(circle at 50% 50%, rgba(255,150,200,.65), rgba(255,100,170,.35) 50%, transparent 75%),
+        radial-gradient(circle at 70% 75%, rgba(0,0,0,.15), transparent 60%);
+      border:1px solid rgba(255,255,255,.5);
+      box-shadow: 
+        inset 0 -2px 8px rgba(0,0,0,.25),
+        inset 0 2px 6px rgba(255,255,255,.4),
+        0 0 20px rgba(255,150,200,.75), 
+        0 0 10px rgba(255,255,255,.4), 
+        0 8px 18px rgba(0,0,0,.5);
+      transform: translate(-5%, -52%);
+      transition: transform .15s ease, box-shadow .15s ease, background .3s ease;
+    }
+    input[type="range"]:active::-moz-range-thumb{
+      transform: translate(-5%, -52%) scale(1.25);
+      box-shadow: 
+        inset 0 -2px 8px rgba(0,0,0,.3),
+        inset 0 2px 6px rgba(255,255,255,.5),
+        0 0 26px rgba(255,200,230,.65), 
+        0 12px 22px rgba(0,0,0,.6);
+    }
+
+    /* Main stage */
+    .stage{
+      position:relative;
+      width: min(980px, 100%);
+      margin:0 auto;
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px 0 0;
+    }
+    .brainFrame{
+      position:relative;
+      width:min(980px, 100%);
+      aspect-ratio: 3 / 4;     /* tall phone-ish */
+      border-radius:20px;
+      overflow:hidden;
+      border:1px solid rgba(35,48,85,.8);
+      box-shadow: var(--shadow);
+      background: #04060b;
+    }
+    .brainImg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      filter: saturate(1.05) contrast(1.05);
+    }
+
+    .hexBackground{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:1;
+      opacity:0.12;
+    }
+    .hexBackground svg{
+      width:100%;
+      height:100%;
+    }
+    /* Overlay items (labels + batteries) */
+    .overlay{
+      position:absolute;
+      inset:0;
+      pointer-events:none; /* allow clicks through except in panels */
+    }
+    .tag{
+      position:absolute;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      transform: translate(-50%, -50%);
+      pointer-events:none;
+    }
+    .tag .label{
+      font-size:14.7px;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      text-shadow: 0 2px 12px rgba(0,0,0,.7);
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 23px rgba(255,255,255,.17);
+    }
+
+    /* Battery */
+    .battery{
+      width:22px;
+      height:64px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.35);
+      background: rgba(255,255,255,.26);
+      position:relative;
+      padding:6px 2px 6px;
+      box-shadow: 0 0 20px rgba(255,255,255,.25), 0 12px 40px rgba(0,0,0,.35);
+      overflow:hidden;
+      filter: drop-shadow(0 0 12px rgba(255,255,255,.3));
+    }
+    .battery::before{
+      content:"";
+      position:absolute;
+      top:-4px;
+      left:50%;
+      width:12px;
+      height:4px;
+      transform:translateX(-50%);
+      border-radius:3px 3px 0 0;
+      border:1px solid rgba(255,255,255,.35);
+      background: rgba(255,255,255,.28);
+      box-shadow: 0 0 8px rgba(255,255,255,.3);
+    }
+    .battery::after{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      background: radial-gradient(280px 280px at 50% 80%, rgba(255,255,255,.18), transparent 60%);
+      pointer-events:none;
+      opacity:1;
+    }
+    .fill{
+      position:absolute;
+      left:2px;
+      right:2px;
+      bottom:6px;
+      width:auto;
+      height:0%;
+      border-radius:5px;
+      transition: height .35s ease, background-color .25s ease, opacity .25s ease;
+      box-shadow: 0 0 18px currentColor, 0 0 8px rgba(255,255,255,.15);
+      opacity:1;
+      filter: brightness(1.2) saturate(1.3);
+    }
+    .off .fill{ height:0% !important; opacity:.15; background:#6b7699; }
+
+    /* Left / right side panels inside stage */
+    .sidePanel{
+      position:absolute;
+      top:62.5%;
+      transform:translateY(-50%);
+      width:286px;
+      background: linear-gradient(135deg, rgba(140,120,200,.28) 0%, rgba(35,48,85,.35) 100%);
+      border:2px solid rgba(255,59,107,.7);
+      border-radius:18px;
+      padding:16px;
+      animation: neonGlow 2.5s ease-in-out infinite;
+      backdrop-filter: blur(14px);
+      pointer-events:auto;
+    }
+    .sidePanel.right{ right:5%; }
+    .sidePanel.left{ left:10px; }
+
+    .panelTitle{
+      font-size:14.7px;
+      color:#ffffff;
+      margin:0 0 10px;
+      letter-spacing:.25px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .chipToggle{
+      cursor:pointer;
+      user-select:none;
+      font-size:14.7px;
+      color:#ffffff;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+    }
+
+    .mechRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:13px;
+      padding:8px 0;
+      border-top:1px dashed rgba(255,255,255,.10);
+      font-size:14.7px;
+    }
+    .mechRow:first-of-type{ border-top:none; padding-top:2px; }
+    .miniBar{
+      width:112px;
+      height:13px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      overflow:hidden;
+      background: rgba(255,255,255,.06);
+    }
+    .miniFill{
+      height:100%;
+      width:0%;
+      transition: width .25s ease, background-color .25s ease;
+    }
+
+    /* Bottom controls */
+    .bottom{
+      width:min(980px, 100%);
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .combo{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(15,25,55,.55), rgba(10,15,35,.35));
+      border-radius:14px;
+      box-shadow: var(--shadow);
+      color:#ffffff;
+      font-size:14.7px;
+    }
+    .combo strong{ color:#ffffff; font-weight:650; }
+
+    details{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      background: rgba(18, 27, 53, 0.55);
+      box-shadow: var(--shadow);
+    }
+    summary{
+      cursor:pointer;
+      user-select:none;
+      padding:12px 12px;
+      list-style:none;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-size:14.7px;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    .panelBody{
+      padding:10px 12px 14px;
+      border-top:1px solid rgba(255,255,255,.08);
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px 14px;
+    }
+    .item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:8.4px 10.5px;
+      border:1.5px solid rgba(255,59,107,.5);
+      border-radius:12px;
+      background: rgba(255,255,255,.04);
+      font-size:14.7px;
+      transition: background-color .25s ease, border-color .25s ease, box-shadow .25s ease, transform .2s ease;
+    }
+    .item:has(input[type="checkbox"]:checked){
+      background: rgba(49,208,127,.18);
+      border-color: rgba(49,208,127,.65);
+      box-shadow: 0 0 16px rgba(49,208,127,.35);
+    }
+    .item label{ display:flex; gap:10px; align-items:center; cursor:pointer; width:100%; }
+    .item input[type="checkbox"]{ 
+      transform: scale(1.27); 
+      accent-color: var(--good);
+      cursor: pointer;
+    }
+    .hint{ font-size:14.7px; color:#ffffff; padding:0 12px 12px; }
+
+    /* Small screens */
+    @media (max-width: 760px){
+      .sidePanel{ display:none; } /* optional: hide mechanisms panel on small screens */
+      .panelBody{ grid-template-columns: 1fr; }
+      .tag .label{ font-size:14.7px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- Timeline -->
+    <div class="timelineBar">
+      <div class="timelineWrap">
+        <input id="timeSlider" type="range" min="0" max="3" step="1" value="0" />
+        <div class="timelineLabels">
+          <span>Now</span>
+          <span>Peak</span>
+          <span>Wears off</span>
+          <span>1–3 days later</span>
+        </div>
+        <div class="timelineHint">
+          <span>Slide to explore</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage -->
+    <div class="stage brainFrame" id="brainFrame">
+      <img class="brainImg" src="brain.jpg" alt="Brain">
+      <div class="brain-light-layer"></div>
+      <!-- overlays / labels / batteries go here -->
+      <div class="overlay" id="overlay"></div>
+
+      <!-- Optional mechanisms panel (right) -->
+      <div class="sidePanel right" id="mechPanel">
+        <div class="panelTitle">
+          <span>Mechanisms</span>
+          <span class="chipToggle" id="toggleMech">Hide</span>
+        </div>
+        <div id="mechRows"></div>
+      </div>
+    </div>
+
+    <!-- Bottom controls -->
+    <div class="bottom">
+
+      <details open style="margin-top: -190px; position: relative; z-index: 15;">
+        <summary>
+          <span>Substances</span>
+          <span style="color:var(--muted)">tap to open/close</span>
+        </summary>
+        <div class="panelBody" id="substancesList"></div>
+        <div class="hint">Educational view. No doses, no instructions.</div>
+      </details>
+
+      <div class="combo" id="comboBar">
+        <div><strong>Combo active (0)</strong> — nothing selected</div>
+        <div id="comboNames"></div>
+      </div>
+
+      <details>
+        <summary>
+          <span>Interactions</span>
+          <span style="color:var(--muted)">tap to open/close</span>
+        </summary>
+        <div class="panelBody" id="interactionsList"></div>
+      </details>
+
+
+      <details>
+        <summary>
+          <span>States (patterns)</span>
+          <span style="color:var(--muted)">tap to open/close</span>
+        </summary>
+        <div class="panelBody" id="statesList"></div>
+        <div class="hint">These are “states”, not labels. People vary.</div>
+      </details>
+
+      <!-- Later: Take a Test button/page -->
+      <details>
+        <summary>
+          <span>Take a test</span>
+          <span style="color:var(--muted)">later</span>
+        </summary>
+        <div class="hint">
+          Build this after the brain engine is stable. This will create a personal profile and adjust weights.
+        </div>
+      </details>
+    </div>
+  </div>
+
+<script>
+/**
+ * Brain Map Prototype
+ * - 4 time steps: 0 Now, 1 Peak, 2 Offset, 3 After
+ * - Batteries show "good pole" sections (green=good)
+ * - Multiple selected inputs add together, then clamp to [-100, 100]
+ * - UI never shows numbers; uses battery fill + color only
+ */
+
+// ----- Config: Sections (positions are % of image) -----
+const SECTIONS = [
+  { id:"joy",      label:"Joy / Pleasure",        x:28, y:50 },
+  { id:"focus",    label:"Focus",                 x:75, y:25 },
+  { id:"energy",   label:"Energy",                x:50, y:11 },
+  { id:"calm",     label:"Calm / Safety",         x:40, y:42 },
+  { id:"clarity",  label:"Clarity",               x:70, y:34 },
+  { id:"ideas",    label:"Creativity / Ideas",    x:55, y:19 },
+  { id:"connect",  label:"Connection / Warmth",   x:22, y:32 },
+  { id:"attach",   label:"Bonding / Attachment",  x:82, y:19 },
+  { id:"drive",    label:"Motivation / Drive",    x:72, y:43 },
+  { id:"sleep",    label:"Sleep quality",         x:47, y:32 },
+  { id:"appetite", label:"Appetite balance",      x:16, y:42 },
+  { id:"fuel",     label:"Body fuel",             x:18, y:20 },
+  { id:"stable",   label:"Emotional stability",   x:39, y:25 },
+];
+
+// ----- Mechanisms (optional panel). Values are derived from inputs too. -----
+const MECH = [
+  { id:"dopamine",   label:"Dopamine" },
+  { id:"serotonin",  label:"Serotonin" },
+  { id:"oxytocin",   label:"Oxytocin" },
+  { id:"noradrenal", label:"Noradrenaline" },
+];
+
+// ----- Inputs (checkbox items) -----
+// Each input has effects across time steps.
+// Effects are per section (good-pole): positive = better, negative = worse.
+// NOTE: These are placeholder educational weights. Replace with your curated model.
+const INPUTS = {
+  substances: [
+    { id:"ssri", name:"Antidepressant (SSRI)", effects:{
+      0:{ stable:+10, calm:+10 },
+      1:{ stable:+20, calm:+15 },
+      2:{ stable:+20, calm:+10 },
+      3:{ stable:+25, calm:+15 },
+      mech:{ serotonin:+25 }
+    }},
+    { id:"adhd_amp", name:"ADHD med (Adderall / Elvanse)", effects:{
+      0:{ focus:+90, energy:+50, calm:-10, sleep:-10, appetite:-10 },
+      1:{ focus:+40, energy:+30, calm:-20, sleep:-25, appetite:-25, drive:+25 },
+      2:{ focus:+20, energy:+10, calm:-10, sleep:-20 },
+      3:{ sleep:-10, stable:-10, calm:-10 },
+      mech:{ dopamine:+30, noradrenal:+35 }
+    }},
+    { id:"concerta", name:"Concerta (methylphenidate)", effects:{
+      0:{ focus:+20, clarity:+10, calm:-10, appetite:-10 },
+      1:{ focus:+35, clarity:+15, calm:-15, sleep:-20, appetite:-20, drive:+15 },
+      2:{ focus:+15, calm:-10, sleep:-15 },
+      3:{ stable:-10, sleep:-10 },
+      mech:{ dopamine:+25, noradrenal:+25 }
+    }},
+    { id:"mdma", name:"MDMA", effects:{
+      0:{ joy:+80, connect:+90, calm:+60 },
+      1:{ joy:+100, connect:+100, talk:100, calm:+20, stable:50 },
+      2:{ joy:+20, connect:+10, energy:-10, sleep:-15, stable:-10 },
+      3:{ joy:-40, calm:-35, stable:-35, sleep:-30, drive:-25, clarity:-15 },
+      mech:{ serotonin:+90, dopamine:+25, oxytocin:+50 }
+    }},
+    { id:"lsd", name:"LSD", effects:{
+      0:{ clarity:+100, ideas:+100, joy:+80, sleep:-10, appetite:-10 },
+      1:{ clarity:+60, ideas:+50, focus:+20, joy:+20, sleep:-30, appetite:-25 },
+      2:{ clarity:+30, ideas:+20, sleep:-25, stable:-10 },
+      3:{ sleep:-15, stable:-10, calm:-10 },
+      mech:{ serotonin:+35, dopamine:+10 }
+    }},
+    { id:"weed_sativa", name:"Weed (sativa)", effects:{
+      0:{ calm:+10, joy:+10 },
+      1:{ calm:+15, joy:+15, clarity:-10, focus:-10 },
+      2:{ focus:-10, clarity:-15 },
+      3:{ drive:-10, clarity:-10 },
+      mech:{ dopamine:+5 }
+    }},
+    { id:"weed_indica", name:"Weed (indica)", effects:{
+      0:{ calm:+15, sleep:+10 },
+      1:{ calm:+20, sleep:+20, clarity:-10, focus:-15 },
+      2:{ sleep:+10, clarity:-15 },
+      3:{ drive:-10, clarity:-10 },
+      mech:{ }
+    }},
+    { id:"dmt", name:"DMT", effects:{
+      0:{ ideas:+10, clarity:+10 },
+      1:{ ideas:+50, clarity:+50, calm:-10 },
+      2:{ calm:+5, clarity:+10 },
+      3:{ stable:+0 },
+      mech:{ serotonin:+15 }
+    }},
+    { id:"cig", name:"Cigarette", effects:{
+      0:{ calm:+5, focus:+5 },
+      1:{ calm:+5, focus:+10, appetite:-10 },
+      2:{ calm:-10, stable:-10, drive:-10 },
+      3:{ calm:-15, stable:-15, drive:-10 },
+      mech:{ dopamine:+10 }
+    }},
+    { id:"vape", name:"Vape", effects:{
+      0:{ calm:+5, focus:+5 },
+      1:{ calm:+5, focus:+10, appetite:-10 },
+      2:{ calm:-10, stable:-10, drive:-10 },
+      3:{ calm:-15, stable:-15, drive:-10 },
+      mech:{ dopamine:+10 }
+    }},
+    { id:"coffee", name:"Coffee", effects:{
+      0:{ energy:+10, focus:+10, calm:-10 },
+      1:{ energy:+20, focus:+15, calm:-20, sleep:-20 },
+      2:{ calm:-10, sleep:-15 },
+      3:{ sleep:-10 },
+      mech:{ noradrenal:+20, dopamine:+5 }
+    }},
+  ],
+
+  interactions: [
+    { id:"friends", name:"Spend time with friends", effects:{
+      0:{ connect:+10, calm:+5 },
+      1:{ connect:+25, joy:+15, stable:+10 },
+      2:{ stable:+10, calm:+10 },
+      3:{ stable:+10, calm:+10 },
+      mech:{ oxytocin:+10, serotonin:+10 }
+    }},
+    { id:"sex_girl", name:"Sex (girl pattern)", effects:{
+      0:{ joy:+15, calm:+10, connect:+10 },
+      1:{ joy:+35, calm:+15, connect:+20 },
+      2:{ calm:+10, connect:+10 },
+      3:{ attach:+45, connect:+15, calm:+5 },
+      mech:{ oxytocin:+40, dopamine:+15 }
+    }},
+    { id:"sex_boy", name:"Sex (boy pattern)", effects:{
+      0:{ joy:+20, calm:+5, connect:+5 },
+      1:{ joy:+45, calm:+5, connect:+10 },
+      2:{ sleep:+10, energy:-5 },
+      3:{ attach:+10, sleep:+5 },
+      mech:{ dopamine:+20, oxytocin:+10 }
+    }},
+    { id:"lonely", name:"Loneliness", effects:{
+      0:{ connect:-10, calm:-10, stable:-10 },
+      1:{ connect:-20, calm:-20, stable:-20 },
+      2:{ connect:-20, calm:-20, stable:-20 },
+      3:{ connect:-25, calm:-25, stable:-25 },
+      mech:{ }
+    }},
+    { id:"prayer", name:"Prayer / meditation", effects:{
+      0:{ calm:+10, stable:+10 },
+      1:{ calm:+15, stable:+15, clarity:+5 },
+      2:{ calm:+10, stable:+10 },
+      3:{ calm:+10, stable:+10 },
+      mech:{ serotonin:+5 }
+    }},
+    { id:"sport", name:"Sport / workout", effects:{
+      0:{ energy:+10, calm:+5 },
+      1:{ energy:+20, stable:+15, drive:+10, sleep:+10 },
+      2:{ sleep:+15, calm:+10 },
+      3:{ sleep:+10, stable:+10 },
+      mech:{ dopamine:+10, serotonin:+10 }
+    }},
+    { id:"no_sleep", name:"No sleep", effects:{
+      0:{ focus:-10, calm:-10, clarity:-10 },
+      1:{ focus:-25, calm:-25, clarity:-25, stable:-20 },
+      2:{ focus:-35, calm:-35, clarity:-35, stable:-30, drive:-20 },
+      3:{ stable:-40, calm:-40, clarity:-30, sleep:-30, fuel:-10 },
+      mech:{ noradrenal:+10 } // stressy
+    }},
+    { id:"no_food", name:"No food / restriction", effects:{
+      0:{ fuel:-10, calm:-5 },
+      1:{ fuel:-25, focus:-10, calm:-15, stable:-15 },
+      2:{ fuel:-35, clarity:-15, stable:-20 },
+      3:{ fuel:-45, stable:-25, calm:-20 },
+      mech:{ }
+    }},
+  ],
+
+  states: [
+    { id:"low_mood", name:"Mood low", effects:{
+      0:{ joy:-20, drive:-15, stable:-10 },
+      1:{ joy:-25, drive:-20, stable:-15 },
+      2:{ joy:-25, drive:-20, stable:-15 },
+      3:{ joy:-25, drive:-20, stable:-15 },
+      mech:{ serotonin:-10 }
+    }},
+    { id:"attention_struggle", name:"Attention struggle", effects:{
+      0:{ focus:-20, clarity:-10 },
+      1:{ focus:-25, clarity:-15 },
+      2:{ focus:-25, clarity:-15 },
+      3:{ focus:-25, clarity:-15 },
+      mech:{ dopamine:-10, noradrenal:-10 }
+    }},
+    { id:"social_overwhelm", name:"Social overwhelm", effects:{
+      0:{ calm:-15, stable:-10 },
+      1:{ calm:-25, stable:-15 },
+      2:{ calm:-25, stable:-15 },
+      3:{ calm:-20, stable:-10 },
+      mech:{ }
+    }},
+    { id:"food_control", name:"Food control / restriction thoughts", effects:{
+      0:{ fuel:-10, appetite:-10, calm:-5 },
+      1:{ fuel:-15, appetite:-15, calm:-10 },
+      2:{ fuel:-20, appetite:-15, calm:-10 },
+      3:{ fuel:-20, appetite:-10, calm:-10 },
+      mech:{ }
+    }},
+  ]
+};
+
+// ----- UI build helpers -----
+const overlayEl = document.getElementById('overlay');
+const timeSlider = document.getElementById('timeSlider');
+const comboBar = document.getElementById('comboBar');
+const comboNames = document.getElementById('comboNames');
+
+const mechPanel = document.getElementById('mechPanel');
+const mechRows = document.getElementById('mechRows');
+const toggleMech = document.getElementById('toggleMech');
+
+let mechVisible = true;
+
+toggleMech.addEventListener('click', () => {
+  mechVisible = !mechVisible;
+  mechPanel.style.display = mechVisible ? 'block' : 'none';
+});
+
+// Create overlay tags (label + battery)
+const sectionEls = new Map();
+for (const s of SECTIONS){
+  const tag = document.createElement('div');
+  tag.className = 'tag off';
+  tag.style.left = s.x + '%';
+  tag.style.top = s.y + '%';
+  tag.dataset.sectionId = s.id;
+
+  const label = document.createElement('div');
+  label.className = 'label';
+  label.textContent = s.label;
+
+  const bat = document.createElement('div');
+  bat.className = 'battery';
+  const fill = document.createElement('div');
+  fill.className = 'fill';
+  bat.appendChild(fill);
+
+  tag.appendChild(label);
+  tag.appendChild(bat);
+  overlayEl.appendChild(tag);
+
+  sectionEls.set(s.id, { tag, fill });
+}
+
+// Build mechanisms panel
+const mechEls = new Map();
+for (const m of MECH){
+  const row = document.createElement('div');
+  row.className = 'mechRow';
+  row.innerHTML = `
+    <div>${m.label}</div>
+    <div class="miniBar"><div class="miniFill"></div></div>
+  `;
+  mechRows.appendChild(row);
+  mechEls.set(m.id, row.querySelector('.miniFill'));
+}
+
+// Build checkbox lists
+function buildList(containerId, list){
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+  for (const item of list){
+    const wrap = document.createElement('div');
+    wrap.className = 'item';
+    wrap.innerHTML = `
+      <label>
+        <input type="checkbox" data-input-id="${item.id}">
+        <span>${item.name}</span>
+      </label>
+    `;
+    el.appendChild(wrap);
+  }
+}
+buildList('substancesList', INPUTS.substances);
+buildList('interactionsList', INPUTS.interactions);
+buildList('statesList', INPUTS.states);
+
+function getCheckedInputIds(){
+  const checks = document.querySelectorAll('input[type="checkbox"][data-input-id]:checked');
+  return [...checks].map(c => c.dataset.inputId);
+}
+
+function findInputById(id){
+  const all = [...INPUTS.substances, ...INPUTS.interactions, ...INPUTS.states];
+  return all.find(x => x.id === id);
+}
+
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+function colorForValue(v){
+  // v is -100..100
+  if (v <= 0) return getComputedStyle(document.documentElement).getPropertyValue('--bad').trim();
+  if (v < 50) return getComputedStyle(document.documentElement).getPropertyValue('--mid').trim();
+  return getComputedStyle(document.documentElement).getPropertyValue('--good').trim();
+}
+
+function fillPercentForValue(v){
+  // Show magnitude only, but keep "off" when 0
+  // If negative, still fills (red) to show "drained"
+  const mag = Math.abs(v);
+  return clamp(mag, 0, 100);
+}
+
+function computeTotals(timeIndex, checkedIds){
+  const totals = Object.fromEntries(SECTIONS.map(s => [s.id, 0]));
+  const mechTotals = Object.fromEntries(MECH.map(m => [m.id, 0]));
+
+  for (const id of checkedIds){
+    const input = findInputById(id);
+    if (!input) continue;
+
+    const tEff = input.effects[timeIndex] || {};
+    for (const [k,v] of Object.entries(tEff)){
+      if (totals[k] !== undefined) totals[k] += v;
+    }
+
+    const mEff = input.effects.mech || {};
+    for (const [k,v] of Object.entries(mEff)){
+      if (mechTotals[k] !== undefined) mechTotals[k] += v;
+    }
+  }
+
+  // clamp
+  for (const k of Object.keys(totals)){
+    totals[k] = clamp(totals[k], -100, 100);
+  }
+  for (const k of Object.keys(mechTotals)){
+    mechTotals[k] = clamp(mechTotals[k], -100, 100);
+  }
+
+  return { totals, mechTotals };
+}
+
+function render(){
+  const timeIndex = parseInt(timeSlider.value, 10);
+  const checkedIds = getCheckedInputIds();
+  const { totals, mechTotals } = computeTotals(timeIndex, checkedIds);
+
+  // Update overlay batteries
+  for (const s of SECTIONS){
+    const v = totals[s.id] || 0;
+    const { tag, fill } = sectionEls.get(s.id);
+
+    if (v === 0){
+      tag.classList.add('off');
+      fill.style.height = '0%';
+      fill.style.backgroundColor = '#6b7699';
+      continue;
+    }
+
+    tag.classList.remove('off');
+    fill.style.height = fillPercentForValue(v) + '%';
+    fill.style.backgroundColor = colorForValue(v);
+  }
+
+  // Update mechanisms
+  for (const m of MECH){
+    const v = mechTotals[m.id] || 0;
+    const bar = mechEls.get(m.id);
+    const pct = clamp(Math.abs(v), 0, 100);
+    bar.style.width = pct + '%';
+    bar.style.backgroundColor = (v >= 0) ? colorForValue(v) : getComputedStyle(document.documentElement).getPropertyValue('--bad').trim();
+  }
+
+  // Combo text
+  const names = checkedIds.map(id => findInputById(id)?.name).filter(Boolean);
+  const count = names.length;
+
+  const left = comboBar.querySelector('strong');
+  left.textContent = `Combo active (${count})`;
+
+  comboBar.firstElementChild.lastChild.textContent = count ? ` — ${names.join(" + ")}` : ` — nothing selected`;
+  comboNames.textContent = "";
+}
+
+document.addEventListener('change', (e) => {
+  if (e.target.matches('input[type="checkbox"][data-input-id]')) render();
+});
+timeSlider.addEventListener('input', () => {
+  const progress = (parseFloat(timeSlider.value) / parseFloat(timeSlider.max)) * 100;
+  timeSlider.style.setProperty('--progress', progress + '%');
+  
+  // Change jellyball color based on timeline position
+  // 0-33%: blue to pink (approaching peak)
+  // 33-66%: pink to orange (peak to wears off)
+  // 66-100%: orange to red (wears off to 1-3 days later)
+  if (progress <= 33) {
+    // Blue to Pink gradient
+    const t = progress / 33;
+    const r = Math.round(200 + (255 - 200) * t);
+    const g = Math.round(235 - (235 - 150) * t);
+    const b = Math.round(255 - (255 - 220) * t);
+    timeSlider.style.setProperty('--thumb-color', `rgba(${r},${g},${b},.65)`);
+    timeSlider.style.setProperty('--thumb-color-mid', `rgba(${r - 80},${g - 60},${b - 50},.35)`);
+    timeSlider.style.setProperty('--thumb-glow', `rgba(${r},${g},${b},.75)`);
+  } else if (progress <= 66) {
+    // Pink to Orange gradient
+    const t = (progress - 33) / 33;
+    const r = 255;
+    const g = Math.round(150 + (180 - 150) * t);
+    const b = Math.round(220 - (220 - 100) * t);
+    timeSlider.style.setProperty('--thumb-color', `rgba(${r},${g},${b},.65)`);
+    timeSlider.style.setProperty('--thumb-color-mid', `rgba(${r - 80},${g - 60},${b - 40},.35)`);
+    timeSlider.style.setProperty('--thumb-glow', `rgba(${r},${g},${b},.75)`);
+  } else {
+    // Orange to Red gradient
+    const t = (progress - 66) / 34;
+    const r = 255;
+    const g = Math.round(180 - (180 - 80) * t);
+    const b = Math.round(100 - 100 * t);
+    timeSlider.style.setProperty('--thumb-color', `rgba(${r},${g},${b},.65)`);
+    timeSlider.style.setProperty('--thumb-color-mid', `rgba(${r - 80},${g - 40},${b},.35)`);
+    timeSlider.style.setProperty('--thumb-glow', `rgba(${r},${g},${b},.75)`);
+  }
+  
+  render();
+});
+
+// Initial render
+render();
+</script>
+</body>
+</html>
